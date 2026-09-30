@@ -1,0 +1,19 @@
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM base AS final
+WORKDIR /app
+COPY ./bin/Release/Staging /app
+# Embedding model (paraphrase-multilingual-MiniLM-L12-v2)
+# Tải bằng scripts/download-embedding-model.sh trước khi build.
+COPY ./Models /app/Models
+
+
+
+RUN ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
+ENV ASPNETCORE_ENVIRONMENT Devonline
+ENTRYPOINT ["dotnet", "AgentService.dll"]
+

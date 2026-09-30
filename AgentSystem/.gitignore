@@ -1,0 +1,64 @@
+# .NET build outputs
+bin/
+obj/
+
+# Embedding model files — tải bằng scripts/download-embedding-model.sh
+backend/AgentService/Models/*.onnx
+backend/AgentService/Models/*.txt
+backend/AgentService/Models/*.json
+
+# Dependencies
+**/node_modules/
+frontend/dist/
+
+# User-specific files
+*.user
+*.suo
+.vs/
+
+# Environment / secrets
+# Secrets local (mỗi người tự tạo, chứa API key thật)
+**/secrets.local.json
+*.env
+.env*
+
+# Claude Code LOCAL settings — per-máy (permission allowlist 696 rule) + có thể lẫn SECRET (pwd/token) → KHÔNG commit
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Output folder (generated files)
+output/
+
+# Trace logs (local-only, không push lên git)
+projects/*/skills/multi-lang/trace/
+projects/*/trace/
+
+# SQL scripts (local-only, mỗi dev tự gen + chạy thủ công — theo feedback_no_migration_in_repo.md)
+projects/*/skills/multi-lang/sql/
+projects/*/sql/
+
+# Mọi thứ SINH RA khi code → local-only (kế hoạch/sql/trace/log/lesson-thô).
+# MỌI subfolder trong memory/ đều ignore (kể cả folder mới về sau → không lo sót như memory/sql/);
+# riêng file .md ở memory/ ROOT vẫn committed (tri thức team đã đúc kết); giữ template.
+memory/*/
+!memory/local.template/
+
+# Scratch / sinh ra khi làm task — local-only (theo CLAUDE.md "File Organization"), KHÔNG commit.
+# Chỗ agent được phép ghi tạm → phải ignore để không lọt rác lên git.
+/tmp/
+.tmp/
+.tmp*/
+scripts/generated/
+scripts/sql/
+
+# Artifact nén/tạm — KHÔNG bao giờ là source (chống rác lọt: scrm_md.zip, angular.json.tmp, *.rar backup...).
+# Lưu ý: scripts/*.sql + backend/**/Migrations/*.sql là schema THẬT của app → vẫn track (không match các pattern dưới).
+*.zip
+*.rar
+*.tmp
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db
+.codemap-cache/

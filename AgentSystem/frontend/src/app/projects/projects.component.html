@@ -1,0 +1,206 @@
+<div class="projects-layout">
+
+  <!-- ── Left: Project list ── -->
+  <div class="project-list">
+    <div class="list-header">
+      <span class="list-title">Projects</span>
+      <button class="btn-icon" (click)="showCreate = !showCreate" title="Thêm project">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+
+    <!-- Create form -->
+    <div *ngIf="showCreate" class="create-form">
+      <input class="input" placeholder="Tên project" [(ngModel)]="newName" (keyup.enter)="createProject()" autofocus />
+      <input class="input" placeholder="Mô tả (tuỳ chọn)" [(ngModel)]="newDesc" (keyup.enter)="createProject()" />
+      <div class="row-gap">
+        <button class="btn btn-primary sm" [disabled]="creating || !newName.trim()" (click)="createProject()">
+          {{ creating ? '...' : 'Tạo' }}
+        </button>
+        <button class="btn btn-ghost sm" (click)="showCreate=false">Huỷ</button>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="hint">Đang tải...</div>
+    <div *ngIf="!loading && projects.length === 0" class="hint">Chưa có project nào.</div>
+
+    <!-- Project rows with checkbox -->
+    <div *ngFor="let p of projects"
+         class="project-row"
+         [class.detail-active]="detailProject?.id === p.id"
+         (click)="openDetail(p)">
+      <input type="checkbox"
+             class="proj-check"
+             [checked]="checked[p.id]"
+             (click)="$event.stopPropagation(); toggleCheck(p.id)"
+             title="Chọn dùng project này" />
+      <div class="proj-info">
+        <span class="proj-name">{{ p.name }}</span>
+        <span *ngIf="p.lastScannedAt" class="badge-scanned">scanned</span>
+      </div>
+      <button class="btn-icon del-btn" (click)="deleteProject(p, $event)" title="Xoá">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Right: Detail ── -->
+  <div class="project-detail" *ngIf="detailProject; else noSel">
+
+    <div class="detail-header">
+      <h2>{{ detailProject.name }}</h2>
+      <p *ngIf="detailProject.description" class="desc">{{ detailProject.description }}</p>
+    </div>
+
+    <div *ngIf="error" class="error-bar">{{ error }}</div>
+
+    <!-- Folder paths table -->
+    <section class="detail-section">
+      <div class="section-head">
+        <h3>Đường dẫn của tôi</h3>
+        <span class="hint-text">Click vào ô đường dẫn để chỉnh sửa</span>
+      </div>
+      <div *ngIf="configLoading" class="hint">Đang tải...</div>
+      <table *ngIf="!configLoading" class="path-table">
+        <tbody>
+          <tr>
+            <td class="path-label">Backend</td>
+            <td class="path-value" (click)="openPathDialog('bePath')" title="Click để sửa">
+              <span *ngIf="editBePath" class="path-text">{{ editBePath }}</span>
+              <span *ngIf="!editBePath" class="path-empty">Chưa có — click để nhập</span>
+              <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td class="path-label">Frontend</td>
+            <td class="path-value" (click)="openPathDialog('fePath')" title="Click để sửa">
+              <span *ngIf="editFePath" class="path-text">{{ editFePath }}</span>
+              <span *ngIf="!editFePath" class="path-empty">Chưa có — click để nhập</span>
+              <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </td>
+          </tr>
+          <tr>
+            <td class="path-label">Output</td>
+            <td class="path-value" (click)="openPathDialog('outputDir')" title="Click để sửa">
+              <span *ngIf="editOutputDir" class="path-text">{{ editOutputDir }}</span>
+              <span *ngIf="!editOutputDir" class="path-empty">Chưa có — click để nhập</span>
+              <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="savingConfig" class="saving-hint">Đang lưu...</div>
+    </section>
+
+    <!-- Modules (sub-projects) -->
+    <section class="detail-section">
+      <div class="section-head">
+        <h3>Modules / Sub-projects</h3>
+        <span *ngIf="modules.length > 0" class="module-sel-count">
+          {{ selectedModuleNames.length }}/{{ modules.length }} đang chọn
+        </span>
+        <button class="btn btn-ghost sm" (click)="addModule()">+ Thêm module</button>
+      </div>
+      <p class="hint-text">Mỗi module là 1 dịch vụ con (vd: Order, Authen, Core). DEV agent sẽ output file vào đúng thư mục của module tương ứng.</p>
+      <div *ngIf="modules.length === 0" class="hint-text" style="color:#334155">Chưa có module nào.</div>
+      <table *ngIf="modules.length > 0" class="path-table modules-table">
+        <thead>
+          <tr>
+            <th class="col-check">
+              <input type="checkbox"
+                     class="proj-check"
+                     [checked]="allModulesChecked"
+                     [indeterminate]="someModulesChecked && !allModulesChecked"
+                     (change)="toggleAllModules()"
+                     title="Chọn tất cả" />
+            </th>
+            <th class="col-name">Tên module</th>
+            <th class="col-desc">Mô tả (agent BA dùng)</th>
+            <th>Source path</th>
+            <th>Output path</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of modules; let i = index" [class.module-active]="m.name && checkedModules[m.name]">
+            <td class="col-check">
+              <input type="checkbox"
+                     class="proj-check"
+                     [checked]="m.name ? checkedModules[m.name] : false"
+                     (change)="toggleModule(m.name)"
+                     [disabled]="!m.name" />
+            </td>
+            <td>
+              <input class="input input-sm" [(ngModel)]="m.name" placeholder="vd: Order" (blur)="saveMyConfig()" />
+            </td>
+            <td class="col-desc">
+              <input class="input desc-input" [(ngModel)]="m.description" placeholder="vd: Quản lý đơn hàng, tạo/cập nhật/huỷ đơn" (blur)="saveMyConfig()" />
+            </td>
+            <td class="path-value" (click)="openModulePathDialog(i, 'sourcePath')">
+              <span *ngIf="m.sourcePath" class="path-text">{{ m.sourcePath }}</span>
+              <span *ngIf="!m.sourcePath" class="path-empty">Click để nhập</span>
+              <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </td>
+            <td class="path-value" (click)="openModulePathDialog(i, 'outputPath')">
+              <span *ngIf="m.outputPath" class="path-text">{{ m.outputPath }}</span>
+              <span *ngIf="!m.outputPath" class="path-empty">Click để nhập</span>
+              <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </td>
+            <td>
+              <button class="btn-icon" (click)="removeModule(i)" title="Xoá">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="savingConfig" class="saving-hint">Đang lưu...</div>
+    </section>
+
+    <!-- Scan -->
+    <section class="detail-section">
+      <div class="section-head">
+        <h3>Scan conventions</h3>
+        <span *ngIf="detailProject.lastScannedAt" class="badge-scanned">
+          Scanned {{ detailProject.lastScannedAt | date:'dd/MM HH:mm' }}
+        </span>
+      </div>
+      <p class="hint-text">
+        Scan source code để AI hiểu conventions của project — chỉ cần scan 1 lần, dùng chung cho tất cả user.
+        Dùng đường dẫn BE/FE đã nhập ở trên.
+      </p>
+      <button class="btn btn-scan" [disabled]="scanning || (!editBePath && !editFePath)" (click)="scanProject()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        {{ scanning ? 'Đang scan...' : 'Scan ngay' }}
+      </button>
+      <pre *ngIf="scanResult" class="scan-result">{{ scanResult }}</pre>
+      <div *ngIf="!scanResult && detailProject.profileJson" class="scan-existing">
+        <div class="hint-text">Profile đã lưu:</div>
+        <pre class="scan-result">{{ detailProject.profileJson }}</pre>
+      </div>
+    </section>
+
+  </div>
+
+  <ng-template #noSel>
+    <div class="no-sel">Chọn một project để xem chi tiết.</div>
+  </ng-template>
+
+</div>
+
+<!-- ── Path picker dialog ── -->
+<div *ngIf="dialogOpen" class="dialog-backdrop" (click)="cancelDialog()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-title">{{ dialogLabel }}</div>
+    <input class="input"
+           [(ngModel)]="dialogValue"
+           placeholder="Nhập đường dẫn đầy đủ, ví dụ: D:\PROJECT\MyApp\backend"
+           (keyup.enter)="confirmDialog()"
+           autofocus />
+    <div class="dialog-hint">Nhập đường dẫn trên máy của bạn rồi nhấn Lưu.</div>
+    <div class="row-gap dialog-actions">
+      <button class="btn btn-primary" (click)="confirmDialog()">Lưu</button>
+      <button class="btn btn-ghost" (click)="cancelDialog()">Huỷ</button>
+    </div>
+  </div>
+</div>

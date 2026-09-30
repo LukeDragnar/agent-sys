@@ -1,0 +1,13 @@
+# Ripgrep config for PS Delivery project
+
+--smart-case
+--context=2
+--color=always
+--max-count=100
+
+--glob=!node_modules
+--glob=!.git
+--glob=!dist
+--glob=!build
+--glob=!bin
+--glob=!obj

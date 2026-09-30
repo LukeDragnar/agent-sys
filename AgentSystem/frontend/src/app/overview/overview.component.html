@@ -1,0 +1,624 @@
+<div class="overview-page">
+
+  <div class="overview-header">
+    <h1 class="overview-title">Tổng quan hệ thống</h1>
+    <p class="overview-sub">Agent System — nền tảng AI assistant dùng chung cho cả team</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button *ngFor="let t of tabs"
+            class="tab-btn"
+            [class.active]="activeTab === t.id"
+            (click)="activeTab = t.id">
+      {{ t.label }}
+    </button>
+  </div>
+
+  <div class="tab-content">
+
+    <!-- ── Giới thiệu ── -->
+    <ng-container *ngIf="activeTab === 'intro'">
+      <section class="section">
+        <h2>Hệ thống này là gì?</h2>
+        <p>Agent System là nền tảng giúp <strong>cả team dùng chung AI assistant (Claude)</strong> để hỗ trợ công việc lập trình hàng ngày — viết code, review, commit, phân tích nghiệp vụ — với context chuẩn của từng dự án đã được setup sẵn.</p>
+        <p>Thay vì mỗi người tự chat với Claude và phải giải thích lại từ đầu mỗi lần, hệ thống này:</p>
+        <ul>
+          <li>Tự load đúng context của project (architecture, patterns, conventions)</li>
+          <li>Tự động lưu toàn bộ conversation vào DB — không cần làm gì thêm</li>
+          <li>Tạo spec/task tự động từ conversation (qua web app)</li>
+          <li>Admin xem được ai đang làm gì, dùng bao nhiêu token, session nào</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Hệ thống giúp được gì?</h2>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">💻</div>
+            <div class="card-body">
+              <div class="card-title">Viết và sửa code</div>
+              <div class="card-cmd"><code>/code-agent</code></div>
+              <p>Tự đọc context đúng project (architecture, patterns, conventions). Không tự thêm feature ngoài yêu cầu.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🔀</div>
+            <div class="card-body">
+              <div class="card-title">Commit, branch, push</div>
+              <div class="card-cmd"><code>/git-agent</code></div>
+              <p>Tạo commit message chuẩn theo convention. Hỏi xác nhận trước khi push.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🔍</div>
+            <div class="card-body">
+              <div class="card-title">Review code</div>
+              <div class="card-cmd"><code>/review-agent</code></div>
+              <p>Review theo checklist <code>qa-code.md</code> của từng project. Phát hiện vi phạm convention.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon">📋</div>
+            <div class="card-body">
+              <div class="card-title">Phân tích nghiệp vụ</div>
+              <div class="card-cmd">BA Agent (web app)</div>
+              <p>Chat để phân tích yêu cầu, tạo spec JSON tự động có versioning.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Các màn hình Web App</h2>
+        <table class="info-table">
+          <thead><tr><th>URL</th><th>Chức năng</th></tr></thead>
+          <tbody>
+            <tr><td><code>/</code> (Chat)</td><td>BA agent — chat, xem spec, diff version</td></tr>
+            <tr><td><code>/orchestrator</code></td><td>Chạy spec → generate code tự động</td></tr>
+            <tr><td><code>/projects</code></td><td>Quản lý project context</td></tr>
+            <tr><td><code>/files</code></td><td>File manager — xem code được sinh ra</td></tr>
+            <tr><td><code>/logs</code></td><td>Xem logs theo category, agent type, ngày</td></tr>
+            <tr><td><code>/admin</code></td><td>Quản lý users, sessions, usage (chỉ Admin)</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+
+    <!-- ── Kiến trúc ── -->
+    <ng-container *ngIf="activeTab === 'architecture'">
+      <section class="section">
+        <h2>Sơ đồ tổng quan</h2>
+        <div class="arch-diagram">
+          <pre>
+Member (terminal — Claude Code)
+        ↕  Stop hook  (tự động sau mỗi response, không tốn thêm tiền)
+   AgentService API  ←→  Database (SQL Server)
+        ↕
+   Web App  →  Sessions / Specs / Logs / Admin / Orchestrator
+          </pre>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Hai luồng độc lập</h2>
+        <table class="info-table">
+          <thead><tr><th>Luồng</th><th>Mô tả</th><th>Tốn API không?</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Terminal bình thường</strong></td>
+              <td>Chat với Claude Code như mọi khi</td>
+              <td><span class="badge green">Không — dùng subscription</span></td>
+            </tr>
+            <tr>
+              <td><strong>Web App chat</strong></td>
+              <td>BA agent trên web tạo spec tự động</td>
+              <td><span class="badge yellow">Có — dùng API key server</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="hint">Stop hook tự động chạy sau mỗi response trong terminal → lưu conversation vào DB mà không gọi thêm bất kỳ API nào.</p>
+      </section>
+
+      <section class="section">
+        <h2>Backend layers</h2>
+        <div class="layer-list">
+          <div class="layer">
+            <span class="layer-name">AgentService</span>
+            <span class="layer-desc">API entry point, HTTP layer, Swagger</span>
+          </div>
+          <div class="layer-arrow">↓ references</div>
+          <div class="layer">
+            <span class="layer-name">AgentCore</span>
+            <span class="layer-desc">Core business logic, services, domain</span>
+          </div>
+          <div class="layer-arrow">↓ references</div>
+          <div class="layer">
+            <span class="layer-name">AgentInfrastructure</span>
+            <span class="layer-desc">Data access, DB, external integrations</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Tech stack</h2>
+        <table class="info-table">
+          <thead><tr><th>Layer</th><th>Technology</th></tr></thead>
+          <tbody>
+            <tr><td>Frontend</td><td>Angular 19, standalone components, SCSS</td></tr>
+            <tr><td>Backend</td><td>.NET 8, ASP.NET Core Web API</td></tr>
+            <tr><td>Database</td><td>SQL Server</td></tr>
+            <tr><td>AI</td><td>Claude API (Anthropic), MCP protocol</td></tr>
+            <tr><td>Auth</td><td>JWT Bearer token</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+
+    <!-- ── Setup ── -->
+    <ng-container *ngIf="activeTab === 'setup'">
+      <section class="section">
+        <h2>Yêu cầu</h2>
+        <table class="info-table">
+          <thead><tr><th>Tool</th><th>Version</th></tr></thead>
+          <tbody>
+            <tr><td>Claude Code CLI</td><td>mới nhất</td></tr>
+            <tr><td>Node.js</td><td>18+</td></tr>
+            <tr><td>.NET SDK</td><td>8.0 (chỉ cần nếu chạy backend local)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Các bước setup</h2>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Clone repo</div>
+            <pre class="code-block">git clone &lt;repo-url&gt;
+cd agent-system</pre>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Cấu hình paths local</div>
+            <pre class="code-block">cp projects/local-paths.example.json projects/local-paths.json</pre>
+            <p>Mở <code>projects/local-paths.json</code>, sửa paths theo máy của bạn:</p>
+            <pre class="code-block">&#123;
+  "scrm":          "D:/Projects/scrm",
+  "scrm_frontend": "D:/Projects/scrm_frontend",
+  "ps_delivery":   "D:/Projects/ps_delivery",
+  ...
+&#125;</pre>
+            <p class="hint">File này đã được gitignore — mỗi người giữ paths riêng, không ảnh hưởng nhau khi pull code.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Cài dependencies MCP</div>
+            <pre class="code-block">cd mcp && npm install && cd ..</pre>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Tạo tài khoản và cấu hình MCP</div>
+            <pre class="code-block">node scripts/setup-user.js</pre>
+            <p>Script hỏi: <strong>username</strong> (đề xuất từ git identity), <strong>password</strong>, <strong>setup key</strong> (hỏi lead). Sau khi chạy xong, <code>.mcp.json</code> được tạo tự động.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <div class="step-title">Mở Claude Code</div>
+            <pre class="code-block">claude</pre>
+            <p>MCP kết nối tự động. Mọi conversation trong terminal tự động được lưu vào DB.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Kiểm tra setup thành công</h2>
+        <p>Vào web app → Sessions → kiểm tra session của bạn xuất hiện sau lần đầu chat.</p>
+      </section>
+
+      <section class="section">
+        <h2>Troubleshooting</h2>
+        <table class="info-table">
+          <thead><tr><th>Lỗi</th><th>Xử lý</th></tr></thead>
+          <tbody>
+            <tr><td>MCP không kết nối</td><td>Kiểm tra <code>AGENT_API_URL</code> trong <code>.mcp.json</code> và backend đang chạy chưa</td></tr>
+            <tr><td>401 Unauthorized</td><td>Sai username/password trong <code>.mcp.json</code></td></tr>
+            <tr><td>Session không xuất hiện trên web</td><td>Kiểm tra backend logs — hook có chạy không</td></tr>
+            <tr><td>Context project không load</td><td>Kiểm tra <code>projects/local-paths.json</code> — path có đúng không</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </ng-container>
+
+    <!-- ── Sử dụng ── -->
+    <ng-container *ngIf="activeTab === 'usage'">
+      <section class="section">
+        <h2>Luồng làm việc thông thường</h2>
+        <div class="flow-steps">
+          <div class="flow-step"><span class="flow-num">1</span>Mở Claude Code trong terminal (folder project cần làm)</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-num">2</span>Tạo session mới cho task</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-num">3</span>Làm việc — Claude tự chọn agent & load context đúng project</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-num">4</span>Xem lại kết quả trên web app nếu cần</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Các agent và khi nào dùng</h2>
+
+        <div class="agent-block">
+          <div class="agent-header">
+            <code class="cmd">/code-agent</code>
+            <span class="agent-label">Viết và sửa code</span>
+          </div>
+          <p>Mở terminal <strong>trong folder project</strong> rồi dùng slash command. Claude sẽ tự đọc context đúng project trước khi làm.</p>
+        </div>
+
+        <div class="agent-block">
+          <div class="agent-header">
+            <code class="cmd">/git-agent</code>
+            <span class="agent-label">Commit, branch, push</span>
+          </div>
+          <p>Dùng sau khi code xong. Claude tạo commit message chuẩn và hỏi trước khi push.</p>
+        </div>
+
+        <div class="agent-block">
+          <div class="agent-header">
+            <code class="cmd">/review-agent</code>
+            <span class="agent-label">Review code</span>
+          </div>
+          <p>Dùng trước khi tạo PR. Claude đọc <code>qa-code.md</code> của project và review theo đúng checklist.</p>
+        </div>
+
+        <div class="agent-block">
+          <div class="agent-header">
+            <code class="cmd">BA Agent</code>
+            <span class="agent-label">Nghiệp vụ & Spec (mặc định)</span>
+          </div>
+          <p>Chat bình thường trên web app, không cần slash command. Dùng khi hỏi về luồng nghiệp vụ, phân tích yêu cầu mới, tạo spec cho task.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Tips</h2>
+        <div class="tip-list">
+          <div class="tip">
+            <div class="tip-title">Đặt title rõ ràng cho session</div>
+            <p>Giúp tra cứu sau này dễ hơn. Ví dụ: <code>fix bug NCC/KH tháng 3</code>, <code>feature thêm trạng thái đơn hàng</code>, <code>review PR workflow sprint 12</code></p>
+          </div>
+          <div class="tip">
+            <div class="tip-title">Mở đúng folder trước khi dùng /code-agent</div>
+            <p>Claude nhận diện project qua path đang mở. Mở <code>D:\PROJECT\Git\scrm</code> thì Claude tự load context SCRM.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-title">Không cần giải thích lại conventions</div>
+            <p>Conventions đã được lưu trong <code>projects/&lt;project&gt;/patterns.md</code> và <code>qa-code.md</code> — Claude đọc tự động.</p>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- ── CodeMap ── -->
+    <ng-container *ngIf="activeTab === 'codemap'">
+      <section class="section">
+        <h2>CodeMap la gi?</h2>
+        <p>CodeMap dung <strong>Roslyn</strong> (C# compiler API) quet toan bo source code, trich xuat cau truc (class, method, property, API endpoint, dependency), luu vao SQL Server. Claude Code query truc tiep thay vi grep → <strong>tiet kiem ~90% tokens</strong>.</p>
+
+        <div class="highlight-box">
+          <div class="highlight-title">Truoc va sau CodeMap</div>
+          <table class="info-table">
+            <thead><tr><th></th><th>Khong co Map</th><th>Co Map</th></tr></thead>
+            <tbody>
+              <tr><td>Tokens/cau hoi</td><td>~10,000</td><td><strong>~800</strong></td></tr>
+              <tr><td>Tool calls</td><td>10-15</td><td><strong>1-2</strong></td></tr>
+              <tr><td>Thoi gian tim</td><td>30-60s</td><td><strong>&lt; 1s</strong></td></tr>
+              <tr><td>Tim sai file</td><td>Thuong xuyen</td><td><strong>0</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Cach thuc hoat dong</h2>
+        <div class="flow-steps">
+          <div class="flow-step"><span class="flow-num">1</span><strong>Scan</strong> — Roslyn doc tung file .cs, parse AST (cu phap), trich xuat class/method/property/endpoint/dependency</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-num">2</span><strong>Luu DB</strong> — Ket qua luu vao SQL Server (3 tables: CodeSymbols, CodeApiEndpoints, CodeDependencies), co index de query nhanh</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><span class="flow-num">3</span><strong>Query</strong> — Claude Code hoac Web UI goi REST API → API query DB → tra ket qua chinh xac</div>
+        </div>
+
+        <pre class="code-block">
+Source code (.cs files)
+    |
+    | Roslyn parse (KHONG dung AI, $0)
+    v
+SQL Server (CodeSymbols, CodeApiEndpoints, CodeDependencies)
+    |
+    |--- REST API  → Web UI (xem tren browser)
+    |--- CLI       → codemap.sh (query tu terminal)
+    |--- MCP       → Claude Code (tu dong query khi can)
+        </pre>
+
+        <p><strong>Luu y:</strong> Toan bo qua trinh scan va query <strong>khong dung AI</strong>, khong ton token. Chi la parse code bang compiler API va query SQL.</p>
+      </section>
+
+      <section class="section">
+        <h2>Vi du thuc te</h2>
+        <p>Cau hoi: <strong>"Tao phieu xuat co may loai?"</strong></p>
+
+        <div class="highlight-box">
+          <div class="highlight-title">Khong co CodeMap (grep truyen thong)</div>
+          <table class="info-table">
+            <thead><tr><th>Buoc</th><th>Lenh</th><th>Tokens</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><code>grep "PhieuXuat" -r</code> → 100+ matches, nhieu noise</td><td>~3,000</td></tr>
+              <tr><td>2</td><td>Doc 3-5 file sai truoc khi tim dung</td><td>~3,000</td></tr>
+              <tr><td>3</td><td><code>grep "LoaiXuat|PhanLoai" -r</code></td><td>~2,000</td></tr>
+              <tr><td>4</td><td><code>grep "enum.*Xuat" -r</code></td><td>~1,500</td></tr>
+              <tr><td>5</td><td>Doc dung file Enum.cs</td><td>~1,000</td></tr>
+              <tr><td>6</td><td>Doc them context</td><td>~3,000</td></tr>
+              <tr><td colspan="2"><strong>Tong: 12-15 tool calls</strong></td><td><strong>~13,500</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="highlight-box" style="margin-top: 12px;">
+          <div class="highlight-title">Co CodeMap</div>
+          <table class="info-table">
+            <thead><tr><th>Buoc</th><th>Lenh</th><th>Tokens</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><code>codemap.sh search PhanLoaiXuatEnum</code> → tra ve 17 enum values + description</td><td>~300</td></tr>
+              <tr><td colspan="2"><strong>Tong: 1 tool call</strong></td><td><strong>~300</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p style="margin-top: 12px;"><strong>Tiet kiem: 97.8% tokens, 0 file doc sai.</strong> Enum values + [Description] attribute da duoc luu san trong ExtraInfo, khong can mo file.</p>
+      </section>
+
+      <section class="section">
+        <h2>Vi du 2: Fix bug OrderService</h2>
+
+        <div class="highlight-box">
+          <div class="highlight-title">Khong co CodeMap</div>
+          <table class="info-table">
+            <tbody>
+              <tr><td><code>grep "OrderService" -r</code> → 20+ files</td><td>~2,500</td></tr>
+              <tr><td>Doc file sai 2-3 lan</td><td>~3,000</td></tr>
+              <tr><td>Grep constructor, DI</td><td>~1,500</td></tr>
+              <tr><td>Grep [HttpPost] + [Route]</td><td>~1,500</td></tr>
+              <tr><td>Doc dung file</td><td>~1,500</td></tr>
+              <tr><td><strong>Tong: 8-12 calls</strong></td><td><strong>~10,000</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="highlight-box" style="margin-top: 12px;">
+          <div class="highlight-title">Co CodeMap</div>
+          <table class="info-table">
+            <tbody>
+              <tr><td><code>codemap.sh symbol OrderService Class</code> → file, line, methods, dependencies</td><td>~800</td></tr>
+              <tr><td><code>codemap.sh endpoint order POST</code> → controller + service chain</td><td>~400</td></tr>
+              <tr><td><strong>Tong: 2 calls</strong></td><td><strong>~1,200</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p style="margin-top: 12px;"><strong>Tiet kiem: 88% tokens.</strong></p>
+      </section>
+
+      <section class="section">
+        <h2>Chi phi uoc tinh</h2>
+        <p>Gia su 1 ngay hoi 20 cau ve codebase:</p>
+        <table class="info-table">
+          <thead><tr><th></th><th>Grep</th><th>CodeMap</th><th>Tiet kiem</th></tr></thead>
+          <tbody>
+            <tr><td>Tokens/ngay</td><td>200,000</td><td>16,000</td><td>184,000</td></tr>
+            <tr><td>Chi phi/ngay (Opus $15/M input)</td><td>$3.00</td><td>$0.24</td><td>$2.76</td></tr>
+            <tr><td>Chi phi/thang (22 ngay)</td><td>$66</td><td>$5.28</td><td><strong>$60.72</strong></td></tr>
+          </tbody>
+        </table>
+        <p>Chi phi van hanh CodeMap: <strong>$0</strong> — scan bang Roslyn, query bang SQL, khong dung AI.</p>
+      </section>
+
+      <section class="section">
+        <h2>Dung tren Web</h2>
+        <p>Mo <a routerLink="/codemap">CodeMap</a> tren menu ben trai.</p>
+        <table class="info-table">
+          <thead><tr><th>Tab</th><th>Chuc nang</th></tr></thead>
+          <tbody>
+            <tr><td>Overview</td><td>Stats tong quan: so class, method, endpoint, dependencies</td></tr>
+            <tr><td>Search</td><td>Go keyword → ket qua realtime, click xem chi tiet</td></tr>
+            <tr><td>Endpoints</td><td>Bang tat ca API routes, filter theo route/method</td></tr>
+            <tr><td>Explorer</td><td>3 panel: Tree (trai) + Detail (giua) + Graph (phai). Keo resize.</td></tr>
+            <tr><td>Dependencies</td><td>Nhap class name → xem depends on + used by</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Dung tren CLI</h2>
+        <pre class="code-block"># Xem danh sach projects
+./codemap.sh projects
+
+# Chon project (hoi 1 lan, cache theo terminal)
+./codemap.sh use SCRM
+
+# Tim class/method/property
+./codemap.sh search OrderService
+
+# Xem chi tiet class
+./codemap.sh symbol OrderService Class
+
+# Tim API endpoint
+./codemap.sh endpoint order POST
+
+# Xem dependency tree
+./codemap.sh deps OrderService
+
+# Re-scan khi code thay doi lon
+./codemap.sh scan "D:\PROJECT\Git\scrm"</pre>
+      </section>
+
+      <section class="section">
+        <h2>Du lieu duoc luu gi?</h2>
+        <table class="info-table">
+          <thead><tr><th>Loai</th><th>Chi tiet</th></tr></thead>
+          <tbody>
+            <tr><td>Class, Interface, Struct, Record</td><td>Ten, namespace, file, line, base types</td></tr>
+            <tr><td>Enum</td><td>Ten + tat ca values + [Description] attribute</td></tr>
+            <tr><td>Method</td><td>Ten, params, return type, attributes</td></tr>
+            <tr><td>Property</td><td>Ten, type, attributes</td></tr>
+            <tr><td>Field (const/static)</td><td>Ten, type, gia tri</td></tr>
+            <tr><td>API Endpoint</td><td>Route, HTTP method, controller, action, service chain</td></tr>
+            <tr><td>Dependency</td><td>Injection (constructor), Inheritance, Implementation</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Khi nao can re-scan?</h2>
+        <ul>
+          <li>Them class/entity/controller moi</li>
+          <li>Doi ten method, doi route</li>
+          <li>Them enum values moi</li>
+          <li><strong>Khong can</strong> re-scan khi chi sua logic ben trong method</li>
+        </ul>
+        <p>Scan mat ~2 phut cho ~5,700 files. Du lieu cu bi xoa truoc khi insert moi.</p>
+      </section>
+    </ng-container>
+
+    <!-- ── Roadmap ── -->
+    <ng-container *ngIf="activeTab === 'roadmap'">
+      <section class="section">
+        <h2>Tong quan he thong</h2>
+        <pre class="code-block">
+AgentSystem
+  |-- BA Agent (web UI)        — Chat, phan tich nghiep vu, tao spec
+  |-- Code Agent (CLI)         — Viet/sua code theo context project
+  |-- Git Agent (CLI)          — Commit/push chuan convention
+  |-- Review Agent (CLI)       — Review theo qa-code.md
+  |-- Orchestrator             — Sinh code tu dong tu spec
+  |-- CodeMap                  — Roslyn scan source, query nhanh
+  |-- Session & History        — Luu conversation, xem lai tren web
+  |-- Spec Management          — Tao/quan ly spec, version tracking
+  |-- Usage Tracking           — Token per user, weekly limit
+  |-- Project Context          — Auto-load architecture/patterns/qa
+  |-- Shared Memory            — Team memory trong git
+        </pre>
+      </section>
+
+      <section class="section">
+        <h2>Modules hien co</h2>
+        <table class="info-table">
+          <thead><tr><th>Module</th><th>Mo ta</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>BA Agent</td><td>Chat tren web, phan tich nghiep vu, tao spec</td><td><span class="badge-done">DONE</span></td></tr>
+            <tr><td>Code Agent</td><td>/code-agent — viet/sua code theo context</td><td><span class="badge-done">DONE</span></td></tr>
+            <tr><td>Git Agent</td><td>/git-agent — commit/push chuan convention</td><td><span class="badge-done">DONE</span></td></tr>
+            <tr><td>Review Agent</td><td>/review-agent — review theo qa-code.md</td><td><span class="badge-done">DONE</span></td></tr>
+            <tr><td>Orchestrator</td><td>Sinh code tu dong (BA-DEV-QA-FIX loop)</td><td><span class="badge-done">DONE</span></td></tr>
+            <tr><td>CodeMap</td><td>Roslyn scan + query CLI/Web/MCP</td><td><span class="badge-done">DONE</span></td></tr>
+            <tr><td>CodeMap Explorer</td><td>Tree + Detail + Graph (D3.js)</td><td><span class="badge-done">DONE</span></td></tr>
+            <tr><td>Session & Spec</td><td>Luu conversation, version spec</td><td><span class="badge-done">DONE</span></td></tr>
+            <tr><td>Usage Tracking</td><td>Token per user, weekly limit</td><td><span class="badge-done">DONE</span></td></tr>
+            <tr><td>Shared Memory</td><td>Team memory trong git</td><td><span class="badge-done">DONE</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Priority 1 — Giam token + tang toc</h2>
+        <table class="info-table">
+          <thead><tr><th>#</th><th>Feature</th><th>Mo ta</th><th>Effort</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>1.1</td><td>Impact Analysis</td><td>codemap.sh impact ClassName — full chain: entity-service-controller-FE</td><td>M</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>1.2</td><td>Incremental Scan Watcher</td><td>File watcher tu scan khi code thay doi</td><td>S</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>1.3</td><td>Smart Context Loader</td><td>Tu query CodeMap inject context vao prompt truoc khi Claude tra loi</td><td>M</td><td><span class="badge-planned">PLANNED</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Priority 2 — Tang chat luong code</h2>
+        <table class="info-table">
+          <thead><tr><th>#</th><th>Feature</th><th>Mo ta</th><th>Effort</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>2.1</td><td>PR Review Auto-Checklist</td><td>git diff → checklist tu dong (thieu DI? can migration? FE can update?)</td><td>M</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>2.2</td><td>Duplicate Detector</td><td>Tim classes/methods trung signature, suggest merge</td><td>M</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>2.3</td><td>Convention Enforcer</td><td>Pre-commit hook check naming/structure theo patterns.md</td><td>S</td><td><span class="badge-planned">PLANNED</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Priority 3 — Tang toc phat trien</h2>
+        <table class="info-table">
+          <thead><tr><th>#</th><th>Feature</th><th>Mo ta</th><th>Effort</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>3.1</td><td>Snippet Templates</td><td>codemap.sh gen entity/controller/service — gen code chuan convention</td><td>M</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>3.2</td><td>API Contract Dashboard</td><td>BE endpoints vs FE calls — tim orphan, missing, breaking changes</td><td>M</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>3.3</td><td>Migration Script Generator</td><td>Detect entity field changes → auto-gen ALTER TABLE</td><td>S</td><td><span class="badge-planned">PLANNED</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Priority 4 — Quan ly & tracking</h2>
+        <table class="info-table">
+          <thead><tr><th>#</th><th>Feature</th><th>Mo ta</th><th>Effort</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>4.1</td><td>Token Budget Dashboard</td><td>Log token per conversation, leaderboard, trend, alert</td><td>M</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>4.2</td><td>Docs Management</td><td>Project docs trong DB, Web UI edit, MCP realtime</td><td>L</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>4.3</td><td>Activity Feed</td><td>Ai dang lam gi, sua module nao, conflict detection</td><td>S</td><td><span class="badge-planned">PLANNED</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Priority 5 — Mo rong</h2>
+        <table class="info-table">
+          <thead><tr><th>#</th><th>Feature</th><th>Mo ta</th><th>Effort</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>5.1</td><td>Multi-project Scan</td><td>Scan tat ca projects (ps_delivery, ecommerce_connect...)</td><td>S</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>5.2</td><td>Cross-project Dependency</td><td>Dependency giua SCRM - ps_delivery - ecommerce_connect qua RabbitMQ</td><td>L</td><td><span class="badge-planned">PLANNED</span></td></tr>
+            <tr><td>5.3</td><td>AI Code Review</td><td>Claude auto-review moi PR, comment tren GitLab</td><td>L</td><td><span class="badge-planned">PLANNED</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>Effort Legend</h2>
+        <table class="info-table">
+          <thead><tr><th>Label</th><th>Thoi gian</th></tr></thead>
+          <tbody>
+            <tr><td><strong>S</strong> (Small)</td><td>1-2 ngay</td></tr>
+            <tr><td><strong>M</strong> (Medium)</td><td>3-5 ngay</td></tr>
+            <tr><td><strong>L</strong> (Large)</td><td>1-2 tuan</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <p>Chi tiet: doc file <code>docs/ROADMAP.md</code> trong repo.</p>
+      </section>
+    </ng-container>
+
+  </div>
+</div>

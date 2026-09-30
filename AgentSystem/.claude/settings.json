@@ -1,0 +1,99 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /d/PROJECT/Git/Tool/agent-system -not -path */bin/* -not -path */obj/* -not -path */.vs/* -type f)",
+      "Bash(dotnet list:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet build:*)",
+      "Bash(bash codemap.sh:*)",
+      "Bash(CODEMAP_PROJECT_ID=:*)",
+      "Bash(CODEMAP_API=:*)",
+      "Bash(git stash *)",
+      "Bash(grep -E \"\\\\.\\(py|ps1|md|sh\\)$\")",
+      "Bash(awk -F: '{print $1}')",
+      "Bash(xargs -0 grep -l \"^\\\\s*ddl[A-Za-z0-9]*:\\\\s*any\\\\[\\\\]\\\\s*=\")",
+      "Bash(python3 /tmp/fix_tsb_init.py)",
+      "Bash(python3 /tmp/smart_fix.py)",
+      "Bash(chmod +x /tmp/check_remaining.sh)",
+      "Bash(bash /tmp/check_remaining.sh)",
+      "Bash(grep \"\\\\.component\\\\.ts$\")",
+      "Bash(xargs -0 grep -l \"inject\\(TranslateSBService\\)\")",
+      "Bash(python3 /tmp/find_class_level_tsb.py)",
+      "Bash(grep -r \"this\\\\.tsb\\\\.t\\(\" src/app --include=\"*.ts\" ! -path \"*/pages/*\" ! -path \"*/**/*.component.ts\")",
+      "Bash(bash /tmp/scan_pattern.sh)",
+      "Bash(echo \"Services: $\\(find src/app -type f -name \"*.service.ts\")",
+      "Bash(xargs -0 grep -l \"^\\\\s*this\\\\.tsb\\\\.t\\(\\)\")",
+      "Bash(awk '/^export class/,/^}/' \"D:\\\\PROJECT\\\\Git\\\\_SourceForBuild\\\\build_scrm_frontend\\\\src\\\\app\\\\pages\\\\ecommerce\\\\chinh-sua-san-pham-nhap\\\\chinh-sua-san-pham-nhap.component.ts\")",
+      "Bash(node -e ' *)",
+      "Bash(bash -c 'braces_open=$\\(grep -o \"{\" \"D:\\\\PROJECT\\\\Git\\\\_SourceForBuild\\\\build_scrm_frontend\\\\src\\\\app\\\\pages\\\\ecommerce\\\\chinh-sua-san-pham-nhap\\\\chinh-sua-san-pham-nhap.component.ts\" | wc -l\\); braces_close=$\\(grep -o \"}\" \"D:\\\\PROJECT\\\\Git\\\\_SourceForBuild\\\\build_scrm_frontend\\\\src\\\\app\\\\pages\\\\ecommerce\\\\chinh-sua-san-pham-nhap\\\\chinh-sua-san-pham-nhap.component.ts\" | wc -l\\); if [ \"$braces_open\" -eq \"$braces_close\" ]; then echo \"Brace balance: PASS\"; else echo \"Brace balance: FAIL \\(open: $braces_open, close: $braces_close\\)\"; fi')",
+      "Bash(bash /tmp/verify.sh)",
+      "Bash(bash /tmp/verify_fixes.sh)",
+      "Bash(node -c src/app/pages/booking-end-user/top-header/top-header.component.ts)",
+      "Bash(git -C \"C:\\\\Git_Project\\\\SourceForBuild\\\\scrm_frontend\" log --oneline -S \"initializeDropdowns\" -- \"src/app/pages/chatbox/phanquyenfanpage/phanquyenfanpage.component.ts\")",
+      "Bash(bash /tmp/convert_inject.sh)",
+      "Bash(python3 \"C:\\\\tmp\\\\bulk_inject_convert.py\")",
+      "Bash(sed 's/\\\\\\\\/\\\\\\\\\\\\\\\\/g')",
+      "Bash(awk '{print \"    r\\\\\"\" $0 \"\\\\\"\"}')",
+      "Bash(python3 \"C:\\\\tmp\\\\bulk_inject_convert_batch2.py\")",
+      "Bash(python3 \"C:\\\\tmp\\\\bulk_inject_convert_v2.py\")",
+      "Bash(python3 \"C:\\\\tmp\\\\bulk_inject_convert_final.py\")",
+      "Bash(grep -E \"\\\\.\\(md|txt\\)$\")",
+      "Bash(python3 fix_stray_commas.py)",
+      "Bash(python3 fix_comma_v3.py)",
+      "Bash(python3 fix_comma_v4.py)",
+      "Bash(grep -r \"import.*inject,$\" \"C:\\\\Git_Project\\\\SourceForBuild\\\\scrm_frontend\\\\src\" --include=\"*.ts\")",
+      "Bash(grep -B2 \"inject,$\" \"C:\\\\Git_Project\\\\SourceForBuild\\\\scrm_frontend\\\\src\\\\app\\\\pages\\\\booking\\\\trang-thai\\\\trang-thai.component.ts\")",
+      "Bash(python3 fix_single_line_imports.py)",
+      "Bash(grep -r \"^.*[A-Za-z] inject,$\" \"C:\\\\Git_Project\\\\SourceForBuild\\\\scrm_frontend\\\\src\" --include=\"*.ts\")",
+      "Bash(python3 fix_word_inject.py)",
+      "Bash(python3 D:\\\\tmp\\\\fix_word_inject.py)",
+      "Bash(python3 /d/tmp/fix_word_inject.py)",
+      "Bash(python3 /tmp/find_duplicate_tsb.py)",
+      "Bash(python3 /d/tmp/remove_duplicate_tsb.py)",
+      "Bash(python3 /d/tmp/fix_private_tsb.py)",
+      "Bash(find \"D:\\\\\\\\PROJECT\\\\\\\\Git\\\\\\\\scrm_frontend\" -type d -name \"chia-so\")",
+      "Read(//d/PROJECT/**)",
+      "Bash(python3 /tmp/fix_all.py)",
+      "Bash(bash /tmp/spawn_agents.sh)",
+      "Bash(bash fix_imports.sh)",
+      "Bash(pkill -f \"ng serve\")",
+      "Bash(curl -s http://10.0.161.21:50888/swagger/index.html -o /dev/null -w \"CodeMap server status: %{http_code}\\\\n\")",
+      "Bash(grep -E \"\\\\.md$\")",
+      "Bash(curl -s http://localhost:5137/swagger/index.html -o /dev/null -w \"Backend status: %{http_code}\\\\n\")",
+      "Bash(export CODEMAP_API=http://localhost:5137)",
+      "Bash(curl -s -o /dev/null -w \"Server 10.0.161.21:50888 status: %{http_code}\\\\n\" http://10.0.161.21:50888/swagger/index.html)",
+      "Bash(export CODEMAP_API=http://10.0.161.21:50888)",
+      "Bash(curl -s -X POST http://10.0.161.21:50888/api/codemap/ac6f2d6d-67ef-49f0-82c7-e273cf2a4bd6/stats -H 'Authorization: Bearer __CMDSUB_OUTPUT__' -H 'Content-Type: application/json')",
+      "Bash(chmod +x /tmp/scan_components.sh)",
+      "Bash(bash /tmp/scan_components.sh)",
+      "Bash(sqlcmd -S \"server=10.0.161.13;database=SCRM_Core;uid=scrm_sa;pwd=NS8KlprJcnhbF8FA1eMI;Encrypt=false;TrustServerCertificate=true\" -i /tmp/query_btn_save.sql)",
+      "Bash(powershell.exe -Command ' *)",
+      "Bash(python3 /tmp/extract_keys.py)",
+      "Bash(powershell -Command ' *)",
+      "Read(//mnt/d/PROJECT/Git/_SourceForBuild/build_scrm_frontend/src/app/components/button/**)",
+      "Read(//root/**)",
+      "Read(//mnt/d/PROJECT/Git/scrm_claude/**)",
+      "Bash(python3 multilang_all_mode_automation.py)",
+      "mcp__agent-system__chat",
+      "Bash(xargs cat *)"
+    ],
+    "additionalDirectories": [
+      "\\tmp",
+      "d:\\PROJECT\\Git\\scrm_claude\\AgentSystem\\projects\\scrm\\multi-lang"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/daily-git-pull.ps1",
+            "timeout": 60,
+            "statusMessage": "AgentSystem: checking daily git update..."
+          }
+        ]
+      }
+    ]
+  }
+}

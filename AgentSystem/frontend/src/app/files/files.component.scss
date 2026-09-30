@@ -1,0 +1,197 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.files-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+.files-header {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 44px;
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.files-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pink);
+}
+
+/* Browse bar */
+.browse-bar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.browse-input {
+  flex: 1;
+  background: var(--surface-0);
+  border: 1px solid var(--border-2);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: 'Consolas', monospace;
+  &:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 2px var(--pink-dim); }
+  &::placeholder { color: var(--text-4); }
+}
+
+.btn-open {
+  background: var(--green-dim);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 6px;
+  color: var(--green);
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  &:hover:not(:disabled) { background: rgba(52,211,153,0.2); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.error-bar {
+  background: var(--red-dim);
+  border-bottom: 1px solid rgba(248,113,113,0.2);
+  color: var(--red);
+  padding: 6px 12px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* Tree + viewer */
+.files-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tree-panel {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--surface-0);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 0;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+}
+
+.tree-hint, .tree-loading {
+  padding: 14px 12px;
+  color: var(--text-4);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 4px;
+  margin: 1px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background .1s;
+
+  &:hover { background: var(--surface-2); }
+  &.is-folder { color: var(--text-2); font-weight: 500; }
+  &.is-file { color: var(--text-3); &:hover { color: var(--text); } }
+  &.selected { background: var(--surface-2); color: var(--pink-muted); border-left: 2px solid var(--pink); }
+}
+
+.node-toggle {
+  font-size: 10px;
+  color: var(--pink-muted);
+  width: 12px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.node-icon {
+  font-size: 10px;
+  color: var(--text-4);
+  width: 12px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.node-name { overflow: hidden; text-overflow: ellipsis; }
+
+/* Viewer */
+.viewer-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--base);
+}
+
+.viewer-empty, .viewer-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-4);
+  font-size: 13px;
+}
+
+.viewer-path {
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 14px;
+  font-family: 'Consolas', monospace;
+  font-size: 11px;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.viewer-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px;
+
+  &::-webkit-scrollbar { width: 6px; height: 6px; }
+  &::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+}
+
+.viewer-code {
+  margin: 0;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-2);
+  white-space: pre;
+  tab-size: 2;
+
+  code { display: block; white-space: pre; }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "SCRM",
+  "description": "Hệ thống CRM đa tenant cho quản lý khách hàng, đơn hàng, công việc, kho, marketing",
+
+  "paths": "-> Hoi user khi bat dau task. Co the co: backend (doc), frontend (doc), workingBE (ghi), workingFE (ghi)",
+
+  "backend": {
+    "framework": ".NET 6 ASP.NET Core Web API",
+    "orm": "Entity Framework Core 7",
+    "database": "SQL Server",
+    "architecture": "Microservices — mỗi domain là 1 service độc lập",
+    "moduleStructure": "{Module}/{Module}.API + {Module}.DataContext + {Module}.Service",
+    "sharedLib": "Libs/SB.Core (relative to backend path)"
+  },
+
+  "frontend": {
+    "framework": "Angular 15",
+    "uiLibrary": "ng-zorro-antd 15 (Ant Design)",
+    "baseComponent": "BaseListComponent (extends cho list screens)",
+    "httpPattern": "BaseService (lastValueFrom + Promise-based)",
+    "stateManagement": "Component-level (no NgRx)",
+    "styling": "SCSS + theme.less (Ant Design customization)"
+  },
+
+  "modules": [
+    { "name": "WorkFlow",    "beFolder": "WorkFlow",    "feFolder": "work",       "description": "Quản lý công việc, dự án, quy trình" },
+    { "name": "Order",       "beFolder": "Order",       "feFolder": "Order",      "description": "Đơn hàng" },
+    { "name": "Customer",    "beFolder": "Customer",    "feFolder": "Customer",   "description": "Khách hàng" },
+    { "name": "Invoice",     "beFolder": "Invoice",     "feFolder": "invoice",    "description": "Hóa đơn" },
+    { "name": "Accounting",  "beFolder": "Accounting",  "feFolder": null,         "description": "Kế toán" },
+    { "name": "Promotion",   "beFolder": "Promotion",   "feFolder": "Promotion",  "description": "Khuyến mãi" },
+    { "name": "HumanResource","beFolder": "HumanResource","feFolder": null,        "description": "Nhân sự" },
+    { "name": "Notification","beFolder": "Notification","feFolder": null,         "description": "Thông báo" },
+    { "name": "Branch",      "beFolder": "Branch",      "feFolder": null,         "description": "Chi nhánh" },
+    { "name": "Report",      "beFolder": "Report",      "feFolder": "Report",     "description": "Báo cáo" },
+    { "name": "Authen",      "beFolder": "Authen",      "feFolder": "login",      "description": "Xác thực nội bộ" },
+    { "name": "Core",        "beFolder": "Core",        "feFolder": null,         "description": "Core shared — User, Permission, DonVi" }
+  ]
+}

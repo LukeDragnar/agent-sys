@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"d:\\\\project\\\\scrm_claude\\\\AgentSystem\\\\frontend\\\\src\" -name \"*.ts\" -exec grep -l \"alert\\\\|confirm\\\\|Dialog\\\\|Message\" {} \\\\;)",
+      "Bash(find \"d:\\\\project\\\\scrm_claude\\\\AgentSystem\\\\frontend\\\\src\" -name \"*.html\" -exec grep -l \"Tất cả\\\\|Yêu thích\\\\|Bỏ yêu thích\" {} \\\\;)",
+      "Read(//d/project/scrm_frontend/src/**)",
+      "Read(//d/project/scrm_frontend/**)",
+      "Bash(node -e ' *)",
+      "Bash(grep -v \"tsb\\\\|<!--\\\\|//\\\\|\\\\\\\\.ten\\\\b\\\\|\\\\\\\\.name\\\\b\\\\|\\\\\\\\.header\\\\b\\\\|data\\\\.\\\\|col\\\\.\\\\|item\\\\.\\\\|\\\\\\\\.title\\\\b\\\\|\\\\\\\\.text\\\\b\\\\|\\\\\\\\.label\\\\b\")",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(node tools/i18n-batch.js --dry-run --module sandboxai)",
+      "Bash(node tools/i18n-batch.js --module sandboxai)",
+      "Bash(node tools/i18n-batch.js --module booking,dat-lich-nang-cao,dongbodata-pushsale,facebook-login,booking-end-user)",
+      "Bash(node tools/i18n-batch.js --module major,sale,Promotion,commission-fee,delivery,deposit-receipt,invoice,marketing-campaign,facebook,chatbox,chia-chat,chia-so,chia-so-care-don,work,in-don --resume)",
+      "Bash(node tools/i18n-batch.js --resume)",
+      "Bash(node -e \"const m = JSON.parse\\(require\\('fs'\\).readFileSync\\('tools/i18n-master-keys.json','utf-8'\\)\\); console.log\\('Total keys:', Object.keys\\(m\\).length\\); const noEn = Object.values\\(m\\).filter\\(v => !v.en\\).length; const noZh = Object.values\\(m\\).filter\\(v => !v.zh\\).length; console.log\\('Missing EN:', noEn\\); console.log\\('Missing ZH:', noZh\\);\")",
+      "Bash(node tools/i18n-batch.js --dry-run)",
+      "Bash(node tools/i18n-consolidate.js)",
+      "Bash(node tools/i18n-consolidate.js --apply)",
+      "Bash(npx ng *)",
+      "Read(//c/Users/ADMINI~1/AppData/Local/Temp/claude/d--project-scrm-claude/5e5c46f8-6135-45ce-80e8-646900b70174/tasks/**)",
+      "Bash(node --max-old-space-size=8192 node_modules/@angular/cli/bin/ng build --configuration development)",
+      "Bash(git -C \"D:/project/ForCode/scrm_frontend\" status --short)",
+      "Read(//d/project/ForCode/**)",
+      "Bash(git clone *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
+      "Bash(node tools/i18n-fill-translations.js)",
+      "Bash(ls /d/project/scrm_frontend/tools/Gleeglee*.csv)"
+    ],
+    "additionalDirectories": [
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\Report\\customer-report-product",
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\Report\\report-daily",
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\Report\\report-doanhthu-theo-khunggio",
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\Report\\report-doanhthu-theo-nguondatlich",
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\Report\\report-chi-nhanh",
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\Report\\report-product",
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\Report\\report-theo-nhan",
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\major\\baocao-congno-phaithu",
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\Report\\report-customer",
+      "D:\\project\\scrm_frontend\\src\\app\\pages\\Report\\report-chuyendoi-lichhen-doanhthu",
+      "C:\\Users\\Administrator\\.claude",
+      "d:\\project\\scrm_frontend\\tools",
+      "D:\\project\\ForCode\\scrm_frontend"
+    ]
+  }
+}

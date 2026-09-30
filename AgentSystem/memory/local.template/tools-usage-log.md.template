@@ -1,0 +1,66 @@
+# Tools Usage Log — {Member Name}
+
+**Member:** {Your Name}
+**Period:** {Start Date} → {End Date}
+
+---
+
+## Ripgrep Usage
+
+| Date | Pattern | File/Context | Result | Notes |
+|------|---------|--------------|--------|-------|
+| 2026-05-05 | `rg "OrderService"` | Finding references | 12 matches | Search BE code |
+| | | | | |
+
+**Total Ripgrep searches:** X
+
+---
+
+## CodeMap Usage
+
+| Date | Command | Symbol/Endpoint | Purpose | Time |
+|------|---------|-----------------|---------|------|
+| 2026-05-05 | `symbol OrderService` | OrderService | Understand architecture | 1.2s |
+| | | | | |
+
+**Total CodeMap queries:** X
+
+---
+
+## MCP Usage
+
+| Date | Action | Purpose | Status |
+|------|--------|---------|--------|
+| (not yet deployed) | - | - | - |
+
+---
+
+## Summary
+
+- **Most used tool:** {Ripgrep / CodeMap / MCP}
+- **Reason:** {Why this tool was most useful}
+
+### Tool Observations
+
+- Ripgrep: {Fast, offline, good for pattern search}
+- CodeMap: {Good for dependencies when backend online}
+- MCP: {Not yet used}
+
+---
+
+## Lessons Learned
+
+-
+-
+
+---
+
+## Feedback for Team
+
+- What worked well?
+- What was slow/difficult?
+- Suggestions for improvement?
+
+---
+
+**Generated:** {Date}

@@ -1,0 +1,329 @@
+<div class="codemap-layout">
+
+  <!-- Header -->
+  <header class="cm-header">
+    <span class="cm-title">CodeMap</span>
+
+    <select [(ngModel)]="selectedProjectId" (ngModelChange)="onProjectChange()">
+      <option value="" disabled>Chon project...</option>
+      <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+    </select>
+
+    <div class="cm-tabs">
+      <button [class.active]="tab === 'overview'" (click)="setTab('overview')">Overview</button>
+      <button [class.active]="tab === 'search'" (click)="setTab('search')">Search</button>
+      <button [class.active]="tab === 'endpoints'" (click)="setTab('endpoints')">Endpoints</button>
+      <button [class.active]="tab === 'explorer'" (click)="setTab('explorer')">Explorer</button>
+      <button [class.active]="tab === 'dependencies'" (click)="setTab('dependencies')">Dependencies</button>
+    </div>
+
+    <div class="cm-scan">
+      <input type="text" [(ngModel)]="scanPath" placeholder="Path source (D:\PROJECT\Git\scrm)" class="scan-input">
+      <button (click)="scan()" [disabled]="scanning || !scanPath" class="btn-scan">
+        {{ scanning ? 'Scanning...' : 'Scan' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Progress bar -->
+  <div *ngIf="scanning && scanProgress" class="scan-progress">
+    <div class="progress-info">
+      <span class="progress-phase">{{ scanProgress.phase | titlecase }}</span>
+      <span class="progress-count">{{ scanProgress.processedFiles }} / {{ scanProgress.totalFiles }} files</span>
+      <span class="progress-pct">{{ scanProgress.percent }}%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" [style.width.%]="scanProgress.percent"></div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="cm-body">
+
+    <!-- Overview -->
+    <div *ngIf="tab === 'overview'" class="cm-panel">
+      <div *ngIf="loading" class="cm-loading">Loading...</div>
+      <div *ngIf="!loading && !stats" class="cm-empty">Chua scan project nao. Nhap path va nhan Scan.</div>
+      <div *ngIf="!loading && stats" class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.totalFiles }}</div>
+          <div class="stat-label">Files</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.classes }}</div>
+          <div class="stat-label">Classes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.interfaces }}</div>
+          <div class="stat-label">Interfaces</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.methods }}</div>
+          <div class="stat-label">Methods</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.properties }}</div>
+          <div class="stat-label">Properties</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.endpoints }}</div>
+          <div class="stat-label">Endpoints</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.dependencies }}</div>
+          <div class="stat-label">Dependencies</div>
+        </div>
+        <div class="stat-card stat-time">
+          <div class="stat-value stat-value-sm">{{ stats.lastScannedAt | date:'dd/MM HH:mm' }}</div>
+          <div class="stat-label">Last Scan</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div *ngIf="tab === 'search'" class="cm-panel">
+      <div class="search-bar">
+        <input type="text" [(ngModel)]="searchQuery" placeholder="Tim class, method, property..."
+          (keyup.enter)="doSearch()" class="search-input">
+        <button (click)="doSearch()" [disabled]="loading" class="btn-search">Search</button>
+      </div>
+
+      <div class="search-body">
+        <div class="search-list">
+          <div *ngIf="loading" class="cm-loading">Searching...</div>
+          <div *ngIf="!loading && !searchResults.length" class="cm-empty">Nhap keyword va Enter</div>
+          <div *ngFor="let r of searchResults" class="search-item" (click)="viewSymbol(r.name, r.symbolType)">
+            <span class="sym-icon" [class]="symbolTypeClass(r.symbolType)">{{ symbolTypeIcon(r.symbolType) }}</span>
+            <span class="search-name">{{ r.name }}</span>
+            <span class="search-ns">{{ r.fullName }}</span>
+            <span class="search-file">{{ r.filePath }}:{{ r.lineNumber }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="selectedSymbol" class="symbol-detail">
+          <div class="detail-header">
+            <span class="sym-icon sym-icon-lg" [class]="symbolTypeClass(selectedSymbol.symbolType)">{{ symbolTypeIcon(selectedSymbol.symbolType) }}</span>
+            <div>
+              <div class="detail-name">{{ selectedSymbol.name }}</div>
+              <div class="detail-ns">{{ selectedSymbol.fullName }}</div>
+            </div>
+            <button class="btn-close" (click)="selectedSymbol = null">x</button>
+          </div>
+          <div class="detail-meta">
+            <span class="meta-tag">{{ selectedSymbol.symbolType }}</span>
+            <span class="meta-tag">{{ selectedSymbol.accessibility }}</span>
+            <span *ngIf="selectedSymbol.baseTypes" class="meta-tag meta-base">{{ selectedSymbol.baseTypes }}</span>
+          </div>
+          <div class="detail-file">{{ selectedSymbol.filePath }}:{{ selectedSymbol.lineNumber }}</div>
+
+          <div *ngIf="selectedSymbol.children?.length" class="detail-section">
+            <div class="section-title">Members</div>
+            <div *ngFor="let c of selectedSymbol.children" class="member-item">
+              <span class="sym-icon sym-icon-sm" [class]="symbolTypeClass(c.symbolType)">{{ symbolTypeIcon(c.symbolType) }}</span>
+              <span class="member-type">{{ c.returnType }}</span>
+              <span class="member-name">{{ c.name }}</span>
+              <span *ngIf="c.parameters" class="member-params">({{ c.parameters }})</span>
+              <span class="member-line">:{{ c.lineNumber }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="selectedSymbol.dependencies?.length" class="detail-section">
+            <div class="section-title">Dependencies</div>
+            <div *ngFor="let d of selectedSymbol.dependencies" class="dep-item">
+              <span class="dep-badge" [class]="depTypeClass(d.dependencyType)">{{ d.dependencyType }}</span>
+              <span class="dep-name">{{ d.toSymbol }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endpoints -->
+    <div *ngIf="tab === 'endpoints'" class="cm-panel">
+      <div class="filter-bar">
+        <input type="text" [(ngModel)]="endpointRoute" placeholder="Route filter..." (keyup.enter)="loadEndpoints()">
+        <select [(ngModel)]="endpointMethod" (ngModelChange)="loadEndpoints()">
+          <option value="">All Methods</option>
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
+          <option value="PATCH">PATCH</option>
+        </select>
+        <button (click)="loadEndpoints()" class="btn-reload">Reload</button>
+      </div>
+
+      <div *ngIf="loading" class="cm-loading">Loading...</div>
+      <div class="endpoint-table-wrap">
+        <table *ngIf="!loading && endpoints.length" class="cm-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Route</th>
+              <th>Controller</th>
+              <th>Action</th>
+              <th>File</th>
+              <th>Chain</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of endpoints">
+              <td><span class="http-badge" [class]="httpMethodClass(e.httpMethod)">{{ e.httpMethod }}</span></td>
+              <td class="cell-route">/{{ e.routeTemplate }}</td>
+              <td>{{ e.controllerName }}</td>
+              <td>{{ e.actionName }}</td>
+              <td class="cell-file">{{ e.filePath }}:{{ e.lineNumber }}</td>
+              <td class="cell-chain"><span *ngFor="let s of e.serviceChain; let last = last">{{ s }}<span *ngIf="!last"> &gt; </span></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div *ngIf="!loading && !endpoints.length" class="cm-empty">Khong co endpoint nao</div>
+    </div>
+
+    <!-- Explorer (Tree + Detail + Graph) -->
+    <div *ngIf="tab === 'explorer'" class="cm-panel explorer-panel">
+      <!-- Panel 1: Tree -->
+      <div class="explorer-tree" [style.width.px]="treePanelWidth">
+        <div class="panel-header">
+          <span>Tree</span>
+          <button *ngIf="!tree.length" (click)="loadTree()" class="btn-reload">Load</button>
+        </div>
+        <div class="panel-content">
+          <div *ngIf="loading && !tree.length" class="cm-loading">Loading...</div>
+          <div *ngIf="!loading && !tree.length" class="cm-empty">Nhan Load</div>
+          <div *ngIf="tree.length" class="tree-wrap">
+            <ng-container *ngTemplateOutlet="treeList; context: { nodes: tree, depth: 0 }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resizer 1 -->
+      <div class="resizer" (mousedown)="startResize($event, 'tree')"></div>
+
+      <!-- Panel 2: Detail -->
+      <div class="explorer-detail" [style.width.px]="detailPanelWidth">
+        <div class="panel-header"><span>Detail</span></div>
+        <div class="panel-content">
+          <div *ngIf="!selectedSymbol" class="cm-empty">Click a class in tree</div>
+          <div *ngIf="selectedSymbol">
+            <div class="detail-header">
+              <span class="sym-icon sym-icon-lg" [class]="symbolTypeClass(selectedSymbol.symbolType)">{{ symbolTypeIcon(selectedSymbol.symbolType) }}</span>
+              <div>
+                <div class="detail-name">{{ selectedSymbol.name }}</div>
+                <div class="detail-ns">{{ selectedSymbol.fullName }}</div>
+              </div>
+            </div>
+            <div class="detail-meta">
+              <span class="meta-tag">{{ selectedSymbol.symbolType }}</span>
+              <span class="meta-tag">{{ selectedSymbol.accessibility }}</span>
+              <span *ngIf="selectedSymbol.baseTypes" class="meta-tag meta-base">{{ selectedSymbol.baseTypes }}</span>
+            </div>
+            <div class="detail-file">{{ selectedSymbol.filePath }}:{{ selectedSymbol.lineNumber }}</div>
+
+            <div *ngIf="selectedSymbol.children?.length" class="detail-section">
+              <div class="section-title">Members ({{ selectedSymbol.children.length }})</div>
+              <div *ngFor="let c of selectedSymbol.children" class="member-item">
+                <span class="sym-icon sym-icon-sm" [class]="symbolTypeClass(c.symbolType)">{{ symbolTypeIcon(c.symbolType) }}</span>
+                <span class="member-type">{{ c.returnType }}</span>
+                <span class="member-name">{{ c.name }}</span>
+                <span *ngIf="c.parameters" class="member-params">({{ c.parameters }})</span>
+                <span class="member-line">:{{ c.lineNumber }}</span>
+              </div>
+            </div>
+
+            <div *ngIf="selectedSymbol.dependencies?.length" class="detail-section">
+              <div class="section-title">Dependencies ({{ selectedSymbol.dependencies.length }})</div>
+              <div *ngFor="let d of selectedSymbol.dependencies" class="dep-item">
+                <span class="dep-badge" [class]="depTypeClass(d.dependencyType)">{{ d.dependencyType }}</span>
+                <span class="dep-name" (click)="onTreeSymbolClick(d.toSymbol)">{{ d.toSymbol }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resizer 2 -->
+      <div class="resizer" (mousedown)="startResize($event, 'detail')"></div>
+
+      <!-- Panel 3: Graph -->
+      <div class="explorer-graph">
+        <div class="panel-header">
+          <span class="graph-breadcrumb">
+            <button *ngIf="graphLevel !== 'modules'" class="graph-back" (click)="loadModuleGraph()">All Modules</button>
+            <span *ngIf="graphLevel === 'classes'"> / {{ graphCurrentModule }}</span>
+            <span *ngIf="graphLevel === 'symbol'"> / {{ graphCurrentModule }} / {{ selectedSymbol?.name }}</span>
+            <span *ngIf="graphLevel === 'modules'">Graph — click module to drill in</span>
+          </span>
+          <span *ngIf="graphData" class="graph-count">{{ graphData.nodes.length }}n {{ graphData.edges.length }}e</span>
+          <button class="graph-toggle" [class.active]="showEdges" (click)="showEdges = !showEdges; toggleEdgeVisibility()">Edges</button>
+          <div class="graph-legend-mini">
+            <span class="legend-dot" style="background:#f472b6" title="Controller"></span>
+            <span class="legend-dot" style="background:#38bdf8" title="Service"></span>
+            <span class="legend-dot" style="background:#34d399" title="Repository"></span>
+            <span class="legend-dot" style="background:#a78bfa" title="Interface"></span>
+            <span class="legend-dot" style="background:#fbbf24" title="Entity"></span>
+          </div>
+        </div>
+        <div id="graph-container" class="panel-content graph-canvas">
+          <div *ngIf="!graphData && !loading" class="cm-empty">Loading module graph...</div>
+          <div *ngIf="loading && !graphData" class="cm-loading">Loading graph...</div>
+        </div>
+      </div>
+
+      <!-- Tree template -->
+      <ng-template #treeList let-nodes="nodes" let-depth="depth">
+        <div *ngFor="let node of nodes" class="tree-node">
+          <div class="tree-row"
+            [style.paddingLeft.px]="8 + depth * 16"
+            [class.tree-row-selected]="selectedSymbol?.name === node.name && (node.type === 'class' || node.type === 'interface')"
+            (click)="onTreeNodeClick(node)">
+            <span *ngIf="node.children?.length" class="tree-arrow" [class.expanded]="node.expanded">></span>
+            <span *ngIf="!node.children?.length" class="tree-arrow-space"></span>
+            <span class="sym-icon sym-icon-sm" [class]="symbolTypeClass(node.type === 'folder' ? '' : node.type)">{{ treeNodeIcon(node.type) }}</span>
+            <span class="tree-name" [class.tree-folder]="node.type === 'folder'">{{ node.name }}</span>
+            <span *ngIf="node.lineNumber" class="tree-line">:{{ node.lineNumber }}</span>
+          </div>
+          <div *ngIf="node.expanded && node.children?.length">
+            <ng-container *ngTemplateOutlet="treeList; context: { nodes: node.children, depth: depth + 1 }"></ng-container>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Dependencies -->
+    <div *ngIf="tab === 'dependencies'" class="cm-panel">
+      <div class="search-bar">
+        <input type="text" [(ngModel)]="depSymbol" placeholder="Class name (e.g. OrderService)"
+          (keyup.enter)="loadDeps()" class="search-input">
+        <button (click)="loadDeps()" [disabled]="loading" class="btn-search">Lookup</button>
+      </div>
+
+      <div *ngIf="loading" class="cm-loading">Loading...</div>
+      <div *ngIf="!loading && depTree" class="dep-panel">
+        <h3 class="dep-title">{{ depTree.symbol }}</h3>
+
+        <div *ngIf="depTree.dependsOn?.length" class="dep-section">
+          <div class="section-title">Depends On</div>
+          <div *ngFor="let d of depTree.dependsOn" class="dep-row">
+            <span class="dep-badge" [class]="depTypeClass(d.dependencyType)">{{ d.dependencyType }}</span>
+            <span class="dep-name" (click)="depSymbol = d.toSymbol; loadDeps()">{{ d.toSymbol }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="depTree.usedBy?.length" class="dep-section">
+          <div class="section-title">Used By</div>
+          <div *ngFor="let d of depTree.usedBy" class="dep-row">
+            <span class="dep-badge" [class]="depTypeClass(d.dependencyType)">{{ d.dependencyType }}</span>
+            <span class="dep-name" (click)="depSymbol = d.fromSymbol; loadDeps()">{{ d.fromSymbol }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="!depTree.dependsOn?.length && !depTree.usedBy?.length" class="cm-empty">
+          Khong tim thay dependency nao cho "{{ depTree.symbol }}"
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /cm-body -->
+</div>

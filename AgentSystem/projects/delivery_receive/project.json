@@ -1,0 +1,25 @@
+{
+  "name": "DeliveryReceive",
+  "description": "Nhận callback trạng thái từ đối tác vận chuyển, chuẩn hóa và forward về DeliveryStatus qua RabbitMQ.",
+
+  "paths": "-> Hoi user khi bat dau task. Key: root",
+
+  "projects": [
+    "DeliveryReceive.API",
+    "DeliveryReceive.DataContext",
+    "DeliveryReceive.Service"
+  ],
+
+  "techStack": {
+    "framework": ".NET 6 ASP.NET Core Web API",
+    "orm": "Entity Framework Core 7.0.2",
+    "messaging": "MassTransit 8.1 + RabbitMQ",
+    "scheduler": "Quartz.NET 3.6.2",
+    "database": "SQL Server"
+  },
+
+  "relatedProjects": [
+    "delivery_connect — đã đăng ký callback URL về service này",
+    "delivery_status — forward data trạng thái qua RabbitMQ"
+  ]
+}

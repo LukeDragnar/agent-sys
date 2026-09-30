@@ -1,0 +1,31 @@
+{
+  "name": "EcommerceConnect",
+  "description": "Kết nối sàn TMĐT (Shopee, TikTok) với CRM. Đồng bộ sản phẩm, tạo/hủy đơn hàng, in vận đơn.",
+
+  "paths": "-> Hoi user khi bat dau task. Key: root",
+
+  "projects": [
+    "EcommerceConnect.API",
+    "EcommerceConnect.DataContext",
+    "EcommerceConnect.Service",
+    "EcommerceReceive.API"
+  ],
+
+  "techStack": {
+    "framework": ".NET 6 ASP.NET Core Web API",
+    "orm": "Entity Framework Core 7.0.2 + EFCore.BulkExtensions",
+    "messaging": "MassTransit 8.1 + RabbitMQ",
+    "scheduler": "Quartz.NET 3.6.2",
+    "cache": "Redis (StackExchange.Redis 2.7.10)",
+    "mapper": "AutoMapper 12",
+    "http": "RestSharp 108",
+    "pdf": "PDFsharp 6.1.1",
+    "misc": "SqlSugarCore 5.1.4, Newtonsoft.Json 13"
+  },
+
+  "ecommercePartners": ["Shopee", "TikTok"],
+
+  "relatedProjects": [
+    "delivery_connect — nhận MessageCreateOrder để tạo đơn vận chuyển"
+  ]
+}

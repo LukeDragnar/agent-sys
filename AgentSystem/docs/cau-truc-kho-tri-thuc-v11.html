@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cấu trúc Kho tri thức — SandBoxVN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;0,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14211c;--ink-soft:#3c4f47;--paper:#f6f3ec;--paper-2:#efe9dc;
+    --line:#d8d0bf;--pine:#1f5d4c;--pine-deep:#163f34;--clay:#c8622f;--clay-soft:#e3b08a;--shadow:rgba(22,63,52,.10);--blue:#2c6149;--mem:#8a6d2f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Be Vietnam Pro',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 22px}
+
+  header.hero{background:radial-gradient(120% 80% at 88% 0%,rgba(200,98,47,.15),transparent 55%),linear-gradient(180deg,var(--pine-deep),var(--pine) 80%);color:#f3efe6;padding:44px 0 36px}
+  .hero .eyebrow{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--clay-soft);font-weight:700;margin-bottom:10px}
+  .hero h1{font-family:'Lora',serif;font-weight:600;font-size:clamp(26px,5vw,38px);line-height:1.1}
+  .hero p{margin-top:12px;font-size:15.5px;color:#d6ddd6;max-width:64ch}
+
+  section{padding:30px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:none}
+  .sec-num{font-family:'Lora',serif;font-style:italic;color:var(--clay);font-size:16px;margin-bottom:6px;display:block}
+  h2{font-family:'Lora',serif;font-weight:600;font-size:clamp(21px,3vw,27px);color:var(--pine-deep);margin-bottom:10px;letter-spacing:-.01em}
+  .lead{font-size:15.5px;color:var(--ink-soft);max-width:72ch;margin-bottom:18px}
+  h3{font-size:17px;font-weight:700;color:var(--pine-deep);margin:22px 0 10px}
+
+  pre.tree{background:var(--pine-deep);color:#d9efe4;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;line-height:1.6;padding:18px 20px;border-radius:12px;overflow-x:auto;white-space:pre;box-shadow:0 2px 0 var(--shadow)}
+  pre.tree .c{color:#e3b08a}
+  pre.tree .d{color:#88c4a6}
+  pre.tree .m{color:#d9b35a}
+
+  .tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line);box-shadow:0 2px 0 var(--shadow);margin-bottom:8px}
+  table{border-collapse:collapse;width:100%;background:#fff;font-size:13.5px;min-width:740px}
+  thead th{background:var(--pine-deep);color:#fff;text-align:left;padding:11px 14px;font-weight:600;font-size:13px;white-space:nowrap}
+  tbody td{padding:11px 14px;border-top:1px solid var(--line);vertical-align:top;color:var(--ink-soft)}
+  tbody tr:nth-child(even){background:var(--paper)}
+  tbody td:first-child{font-weight:700;color:var(--ink);white-space:nowrap}
+  code.f{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--paper-2);padding:1px 6px;border-radius:5px;color:var(--pine-deep);white-space:nowrap}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;color:#fff;white-space:nowrap}
+  .t-comp{background:var(--pine-deep)} .t-proj{background:var(--blue)} .t-feat{background:var(--clay)} .t-mem{background:var(--mem)}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0 6px;font-size:12.5px;color:var(--ink-soft)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  .principle{background:#fff;border:1px solid var(--line);border-left:3px solid var(--clay);border-radius:0 11px 11px 0;padding:14px 17px;margin-bottom:11px}
+  .principle b{color:var(--pine-deep);font-size:15px}
+  .principle p{font-size:14px;color:var(--ink-soft);margin-top:4px}
+
+  .note-box{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--pine);border-radius:0 11px 11px 0;padding:14px 17px;margin:12px 0}
+  .note-box .nb-title{font-weight:700;color:var(--pine-deep);font-size:15px;margin-bottom:5px}
+  .note-box p{font-size:14px;color:var(--ink-soft);margin-bottom:6px}
+  .note-box ul{padding-left:18px;margin:4px 0 0}
+  .note-box li{font-size:14px;color:var(--ink-soft);margin-bottom:5px}
+  .note-box li b{color:var(--ink)}
+
+  .callout{background:linear-gradient(135deg,var(--pine-deep),var(--pine));color:#eef3ee;border-radius:13px;padding:20px 22px;margin-top:6px}
+  .callout b{display:block;font-family:'Lora',serif;font-size:17px;color:#fff;margin-bottom:6px}
+  .callout p{font-size:14px;color:#d6ddd6}
+
+  .rule-do{background:#eef5f0;border:1px solid #cfe3d7;border-radius:10px;padding:13px 16px;margin-bottom:9px}
+  .rule-do b{color:var(--pine-deep)}
+  .rule-dont{background:#fbeee7;border:1px solid #ecd1bf;border-radius:10px;padding:13px 16px;margin-bottom:9px}
+  .rule-dont b{color:var(--clay)}
+  .rule-do p,.rule-dont p{font-size:13.5px;color:var(--ink-soft);margin-top:3px}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  .col{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff}
+  .col .h{padding:11px 15px;color:#fff;font-weight:700;font-size:14.5px}
+  .col.kho .h{background:linear-gradient(135deg,var(--pine),var(--pine-deep))}
+  .col.code .h{background:linear-gradient(135deg,var(--clay),#9e4a22)}
+  .col .b{padding:13px 15px;font-size:13.5px;color:var(--ink-soft)}
+  .col .b ul{padding-left:17px;margin:6px 0 0}
+  .col .b li{margin-bottom:6px}
+  .col .b li b{color:var(--ink)}
+  @media(max-width:640px){.split{grid-template-columns:1fr}pre.tree{font-size:10.5px}}
+
+  .loop{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:6px 0 4px}
+  .lstep{flex:1;min-width:135px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 13px;position:relative;box-shadow:0 1px 0 var(--shadow)}
+  .lstep .ln{font-family:'Lora',serif;font-size:13px;color:var(--clay);font-weight:600}
+  .lstep b{display:block;font-size:14px;color:var(--pine-deep);margin:2px 0 3px}
+  .lstep p{font-size:12.5px;color:var(--ink-soft);margin:0}
+  .larrow{display:flex;align-items:center;color:var(--pine);font-size:20px;font-weight:700;flex:none}
+  .loopback{background:var(--paper-2);border:1px dashed var(--clay);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--ink-soft);margin-top:10px;text-align:center}
+  .loopback b{color:var(--clay)}
+  @media(max-width:640px){.loop{flex-direction:column}.larrow{transform:rotate(90deg);justify-content:center;padding:2px 0}}
+  footer{background:var(--pine-deep);color:#bcc8c1;padding:20px 0;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Tài liệu chuẩn · SandBoxVN</div>
+    <h1>Cấu trúc Kho tri thức</h1>
+    <p>Sơ đồ và quy tắc tổ chức kho tri thức dùng chung cho đội phát triển — để AI nạp đúng thứ cần, và cả đội cập nhật được lâu dài. Đây là khuôn mẫu để dựng và duy trì kho.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- 1. TU DUY -->
+<section>
+  <span class="sec-num">Phần một</span>
+  <h2>Tư duy nền: kho là bản đồ, không phải kho chứa</h2>
+  <p class="lead">Sai lầm thường gặp là nhồi mọi thứ vào một file lớn. Kho tri thức đúng nghĩa là một <b>tấm bản đồ chỉ đường</b>: không chứa toàn bộ chi tiết hệ thống (chi tiết nằm trong mã), mà giúp AI hiểu hệ thống được sắp xếp ra sao và tìm đúng chỗ khi cần. Mọi file trong kho phải trả lời được ba câu:</p>
+  <div class="principle"><b>Nó là gì?</b><p>Mỗi file một mục đích rõ — mô tả hệ thống, đặt quy tắc, hay lưu kinh nghiệm. Không trộn lẫn.</p></div>
+  <div class="principle"><b>Khi nào AI nạp nó?</b><p>AI không đọc cả kho mỗi lần. Mỗi file gắn với một loại việc — chỉ nạp khi việc đó tới.</p></div>
+  <div class="principle"><b>Ai giữ và khi nào cập nhật?</b><p>Mỗi file một người chủ, một dịp cập nhật. Không ai giữ = file chết, dần sai lệch thực tế.</p></div>
+  <div class="note-box">
+    <p class="nb-title">Năm nguyên tắc nền (gói gọn cả tài liệu này).</p>
+    <ul>
+      <li><b>Phân tầng theo phạm vi:</b> toàn công ty → mảng → phân hệ.</li>
+      <li><b>Tách ba loại nội dung:</b> mô tả · quy tắc · trí nhớ — không trộn.</li>
+      <li><b>File nhỏ trỏ nhau</b> qua README, không gộp thành file khổng lồ.</li>
+      <li><b>Mỗi file một chủ + một nhịp cập nhật.</b></li>
+      <li><b>Đặt chung trong mã nguồn</b> để tự đồng bộ.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 2. SO DO CAY -->
+<section>
+  <span class="sec-num">Phần hai</span>
+  <h2>Sơ đồ cây kho tri thức</h2>
+  <p class="lead">Lưu ý: <code class="f">projects/</code> ở đây là <b>các mảng lớn của SandBox</b> (mỗi mảng một hệ thống con), không phải dự án rời. Toàn bộ cây đặt <b>chung trong mã nguồn</b> để tự đồng bộ cho cả đội.</p>
+  <pre class="tree">SandBox/
+├── <span class="c">README.md</span>            <span class="d">← TẦNG 1 · MỤC LỤC (bản đồ): tìm tính năng → projects/&lt;mảng&gt;/features/ ; cập nhật mỗi lần đổi, dùng đa mặt trận</span>
+├── <span class="c">CONVENTIONS.md</span>       <span class="d">← quy ước đặt tên file, ngôn ngữ, cách thêm mới</span>
+│
+├── <span class="c">rules/</span>               <span class="d">← TẦNG TOÀN CÔNG TY (áp dụng MỌI mảng)</span>
+│   ├── code.md          quy tắc viết mã chung
+│   ├── git.md           quy tắc nhánh, commit, gộp mã
+│   ├── build.md         quy tắc build / chạy
+│   ├── db.md            quy tắc dữ liệu, đặt tên bảng
+│   └── quy-trinh-theo-level.md   quy trình theo cấp + cờ leo thang (định nghĩa XONG)
+│
+├── <span class="c">agents/</span>              <span class="d">← VAI TRÒ chung (AI làm việc gì): dùng ở MỌI mảng</span>
+│   ├── code-agent.md         chỉ đọc &amp; sửa mã
+│   ├── review-agent.md       rà mã theo checklist
+│   ├── trace-agent.md        tự chạy thử case edge, báo lỗi
+│   ├── git-agent.md          thao tác git, xác nhận trước
+│   └── duc-ket-agent.md      đúc kết sau khi xong → đề xuất ghi vào kho
+│
+├── <span class="c">skills/</span>              <span class="d">← LỆNH TẮT chung (cách làm 1 việc nhanh): mọi mảng</span>
+│   ├── phan-trang.md         màn danh sách → phân trang chuẩn
+│   └── dinh-dang-tien.md     hiển thị tiền đúng định dạng
+│
+├── <span class="c">projects/</span>            <span class="d">← TẦNG TỪNG MẢNG LỚN CỦA SANDBOX</span>
+│   ├── scrm/                 (quản lý khách hàng)
+│   │   ├── architecture.md   bản đồ &amp; điểm nối nguy hiểm
+│   │   ├── patterns.md       chuẩn viết mã của mảng này
+│   │   ├── qa-code.md        checklist rà mã
+│   │   ├── qa-spec.md        checklist NGHIỆP VỤ (đề bài cho test)
+│   │   ├── domain.md         thuật ngữ nghiệp vụ
+│   │   ├── lessons.md        lỗi đã gặp của riêng mảng này
+│   │   ├── <span class="c">skills/</span>           <span class="d">← lệnh tắt RIÊNG mảng SCRM</span>
+│   │   │   └── multi-lang/   (đa ngôn ngữ — trước để nhầm ở agents/)
+│   │   └── <span class="c">features/</span>         <span class="d">← TÍNH NĂNG — mỗi tính năng 1 thư mục (Tầng 2 + 3)</span>
+│   │       └── khuyen-mai-mua-tang/
+│   │           ├── summarize.md   (Tầng 2: frontmatter · là gì · để làm gì · cần chú ý · ảnh hưởng)
+│   │           └── flow.md        (Tầng 3: tiền đk · luồng user · luồng admin · case · ví dụ số · hậu đk)
+│   ├── ps_delivery/          (giao vận)
+│   ├── ecommerce_connect/    (kết nối sàn)
+│   ├── delivery_connect/
+│   ├── delivery_receive/
+│   └── delivery_status/
+│
+├── <span class="c">templates/</span>           <span class="d">← MẪU để thêm mới cho đồng đều</span>
+│   ├── feature.md            khuôn 1 tính năng mới (tóm tắt + luồng)
+│   └── agent.md              khuôn 1 vai mới
+│
+└── <span class="m">memory/</span>              <span class="d">← TRÍ NHỚ TÍCH LŨY (xuyên suốt mọi mảng)</span>
+    ├── decisions.md          quyết định chung đã chốt &amp; lý do
+    ├── feedback-rules.md     quy tắc rút ra từ phản hồi (vd: luôn trace trước khi báo xong)
+    └── <span class="m">trace/</span>               log các lần trace (tự sinh)</pre>
+  <p class="lead" style="margin-top:14px">Điều chỉnh quan trọng: tách <code class="f">skills/</code> (lệnh tắt) ra khỏi <code class="f">agents/</code> (vai trò) — hai thứ khác bản chất; thêm <b>đúc-kết-agent</b>; chuyển <b>multi-lang</b> về <code class="f">projects/scrm/skills/</code> vì nó là lệnh tắt riêng mảng SCRM, không phải vai chung. Trước đây nó bị để nhầm ở <code class="f">agents/</code> gốc — đúng kiểu “bạ đâu vứt đấy”.</p>
+
+  <div class="note-box">
+    <p class="nb-title">Cẩm nang tính năng — 3 tầng (phóng to dần).</p>
+    <ul>
+      <li><b>Tầng 1 · Mục lục — <code class="f">README.md</code>:</b> bản đồ tìm tính năng. Là cuốn cẩm nang, cập nhật mỗi khi có thay đổi; phục vụ đa mặt trận, không chỉ dev.</li>
+      <li><b>Tầng 2 · Tóm tắt — <code class="f">features/&lt;tính-năng&gt;/summarize.md</code>:</b> là gì · để làm gì · cần chú ý gì. Viết bằng ngôn ngữ nghiệp vụ để CSKH/sales/đào tạo đọc hiểu. Phần "cần chú ý" (ảnh hưởng + cạm bẫy) là chỗ quý nhất — nuôi từ vòng lặp bug.</li>
+      <li><b>Tầng 3 · Luồng — <code class="f">features/&lt;tính-năng&gt;/flow.md</code>:</b> bước 1, 2, 3… Phục vụ viết test case, hướng dẫn, demo. Viết test từ đây cũng chính là cách kiểm chứng luồng đúng/sai.</li>
+    </ul>
+    <p>Ba tầng này là cuốn <b>cẩm nang</b>: <code class="f">README.md</code> (mục lục) ở <b>đầu cây</b>; còn <code class="f">summarize.md</code> + <code class="f">flow.md</code> của từng tính năng nằm trong <code class="f">projects/&lt;mảng&gt;/features/&lt;tính-năng&gt;/</code> để dev thấy ngay khi làm mảng đó. Mỗi vai dừng ở tầng vừa đủ: QA lấy luồng, CSKH lấy mục lục + tóm tắt, đào tạo lấy tóm tắt + luồng. <b>README phải index đủ tính năng của mọi mảng</b> để support/sales/đào tạo tìm được dù nó nằm sâu trong mảng. Cập nhật cẩm nang là một phần của “XONG”, không phải việc làm thêm khi rảnh.</p>
+  </div>
+</section>
+
+<!-- 2E. KHUON CAM NANG -->
+<section>
+  <span class="sec-num">Phần hai · bổ sung</span>
+  <h2>Khuôn cẩm nang: viết gì trong Tóm tắt &amp; Luồng</h2>
+  <p class="lead">Cẩm nang chỉ sống nếu mọi người điền đúng khuôn. Hai tầng có bộ mục cố định — điền đủ thì đồng đều, thiếu mục nào là kho bắt đầu loãng. Nhớ ranh giới: <b>Tóm tắt để HIỂU</b> (không số, không bước); <b>Luồng để LÀM / TEST / DEMO</b> (có bước, có case, có số).</p>
+  <div class="split">
+    <div class="col kho">
+      <div class="h">features/&lt;tính-năng&gt;/summarize.md</div>
+      <div class="b">
+        <ul>
+          <li><b>frontmatter</b> <span style="color:var(--ink-soft)">[máy đọc]</span> — alias · trạng thái (Core/Add-on/cần bật/cần cấu hình) · gói · quyền · phụ thuộc module · link. Đây là phần skill quét để match ticket &amp; phân nhánh.</li>
+          <li><b>Là gì</b> — 1–2 câu định nghĩa.</li>
+          <li><b>Để làm gì / cho ai</b> — giá trị nghiệp vụ + actor chính.</li>
+          <li><b>Cần chú ý</b> — cạm bẫy, ràng buộc, ngoại lệ (nuôi từ vòng lặp bug). Mục quý nhất.</li>
+          <li><b>Ảnh hưởng tới</b> — đụng vào đây thì liên quan / gãy ở đâu.</li>
+          <li><b>Link xuống</b> — tới luồng + code/domain.</li>
+        </ul>
+        <p style="margin-top:8px">frontmatter là <b>bản gốc</b> của alias/trạng thái/gói — prose chỉ diễn giải, không ghi lệch nhau.</p>
+      </div>
+    </div>
+    <div class="col code">
+      <div class="h">features/&lt;tính-năng&gt;/flow.md</div>
+      <div class="b">
+        <ul>
+          <li><b>Tiền điều kiện</b> — vai trò/dữ liệu/trạng thái cần trước.</li>
+          <li><b>Luồng dùng (user)</b> — bước 1, 2, 3… + kết quả mong đợi.</li>
+          <li><b>Luồng bật/cấu hình (admin)</b> — bật/setup ra sao → để skill đề xuất phương án "chỉ cần bật".</li>
+          <li><b>Các trường hợp / nhánh</b> — luồng phụ + case biên: rollback, retry, input rỗng, vượt cap, tồn = 0, đổi trạng thái ngược.</li>
+          <li><b>Ví dụ cụ thể có số</b> — "đề và đáp án".</li>
+          <li><b>Hậu điều kiện</b> — trạng thái &amp; dữ liệu sau khi xong.</li>
+        </ul>
+        <p style="margin-top:8px">= use case (tài liệu BA) + ví dụ số → đề bài test.</p>
+      </div>
+    </div>
+  </div>
+  <div class="note-box">
+    <p class="nb-title">Ví dụ điền — khuyến mãi mua tặng.</p>
+    <p><b>Tóm tắt:</b> <i>frontmatter</i> = alias["mua 1 tặng 1","tặng kèm"] · trạng thái = Add-on/cần cấu hình · gói = Pro · phụ thuộc = Kho, Hóa đơn · link. <i>Prose:</i> Là gì = mua đủ điều kiện được tặng hàng · Cho ai = thu ngân/sale khi tạo đơn · Cần chú ý = tặng phẩm vẫn trừ tồn nhưng không tính doanh thu, rollback phải hoàn cả tặng · Ảnh hưởng = Đơn hàng · Kho · Hóa đơn.</p>
+    <p><b>Luồng:</b> Tiền điều kiện = đơn đang mở, đã bật cấu hình KM · <i>Luồng dùng</i> = B1 kiểm đơn ≥ ngưỡng → B2 chọn tặng phẩm → B3 trừ tồn (Huong = −1) → B4 ghi line giá 0, ngoài doanh thu · <i>Luồng bật/cấu hình (admin)</i> = vào Cấu hình KM → tạo chương trình mua-tặng → gán điều kiện &amp; tặng phẩm → bật · Case = tồn tặng = 0; đơn thiếu 1 đồng; rollback sau khi đã tặng · Ví dụ = mua 3 tặng 1, đơn 600k → tặng 1 SP giá 0, doanh thu 600k, trừ tồn tặng 1 · Hậu điều kiện = đơn có line tặng, tồn giảm, doanh thu không đổi.</p>
+  </div>
+  <div class="note-box">
+    <p class="nb-title">Ranh giới để không lặp giữa hai tầng.</p>
+    <p>Tóm tắt nói <b>cảnh báo</b> ("đừng quên tặng phẩm vẫn trừ tồn"); Luồng nói <b>bước xử lý + case</b> ("B3 trừ tồn tặng; case tồn = 0 → chặn/báo"). Cùng chủ đề, khác độ chi tiết — không chép qua lại.</p>
+  </div>
+</section>
+<section>
+  <span class="sec-num">Phần hai · bổ sung</span>
+  <h2>Agent (vai trò) khác Skill (lệnh tắt) thế nào</h2>
+  <p class="lead">Đây là chỗ team hay lẫn, dẫn tới “bạ đâu vứt đấy”. Phân biệt rõ thì xếp đúng chỗ ngay:</p>
+  <div class="split">
+    <div class="col kho">
+      <div class="h">AGENT — vai trò (AI làm việc gì)</div>
+      <div class="b">
+        <p>Một “người làm” theo vai, dùng ở nhiều việc khác nhau.</p>
+        <ul>
+          <li><b>code-agent:</b> chuyên đọc &amp; sửa mã.</li>
+          <li><b>review-agent:</b> chuyên rà mã.</li>
+          <li><b>trace-agent:</b> chuyên chạy thử case edge.</li>
+          <li><b>đúc-kết-agent:</b> chuyên rút kinh nghiệm sau khi xong.</li>
+        </ul>
+        <p style="margin-top:8px">Đặt ở <code class="f">agents/</code> (dùng mọi mảng).</p>
+      </div>
+    </div>
+    <div class="col code">
+      <div class="h">SKILL — lệnh tắt (cách làm 1 việc nhanh)</div>
+      <div class="b">
+        <p>Quy trình đóng gói sẵn cho MỘT loại việc lặp lại.</p>
+        <ul>
+          <li><b>xuất Excel</b> cho một màn.</li>
+          <li><b>phân trang</b> màn danh sách.</li>
+          <li><b>đa ngôn ngữ</b> cho một module.</li>
+          <li><b>định dạng tiền</b> theo chuẩn.</li>
+        </ul>
+        <p style="margin-top:8px">Đặt ở <code class="f">skills/</code> (chung) hoặc <code class="f">projects/&lt;mảng&gt;/skills/</code> (riêng mảng).</p>
+      </div>
+    </div>
+  </div>
+  <div class="note-box">
+    <p class="nb-title">Cách phân biệt nhanh: “ai làm” hay “làm việc gì”.</p>
+    <p>Nếu nó là một <b>vai trò</b> dùng cho nhiều việc → agent. Nếu nó là <b>cách làm một việc cụ thể, lặp lại</b> → skill. <code class="f">multi-lang</code> là “cách chuyển đa ngôn ngữ” → là skill, lại chỉ dùng cho SCRM → để ở <code class="f">projects/scrm/skills/</code>, không phải <code class="f">agents/</code> gốc.</p>
+  </div>
+</section>
+
+<!-- 2C. BUOC DUC KET -->
+<section>
+  <span class="sec-num">Phần hai · bổ sung</span>
+  <h2>Bước đúc kết: cách kho tự khôn lên</h2>
+  <p class="lead">Đây là vòng lặp làm kho dày thêm theo thời gian. Sau khi làm xong một việc, gọi <b>đúc-kết-agent</b> (“đúc kết lại đi”) — AI nhìn lại việc vừa làm và tự hỏi bốn câu, rồi đề xuất, người duyệt, ghi vào kho.</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>AI tự hỏi</th><th>Nếu có → ghi vào đâu</th></tr></thead>
+    <tbody>
+      <tr><td>Có quy tắc nào nên thành chuẩn?</td><td><code class="f">rules/</code> (nếu chung) hoặc <code class="f">patterns.md</code> của mảng</td></tr>
+      <tr><td>Có lỗi nào vừa gặp, nên ghi để không tái phạm?</td><td><code class="f">projects/&lt;mảng&gt;/lessons.md</code></td></tr>
+      <tr><td>Có quy trình nào lặp đủ nhiều, nên đóng thành lệnh tắt?</td><td><code class="f">skills/</code> (skill mới)</td></tr>
+      <tr><td>Có quyết định/quy ước nào nên lưu lại?</td><td><code class="f">memory/decisions.md</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note-box">
+    <p class="nb-title">Vì sao phải đóng thành một “vai” gọi được, không để tùy hứng.</p>
+    <p>Nếu chỉ trông chờ ai nhớ thì ghi → sẽ quên, kho nghèo dần (đúng bệnh hiện tại). Đóng thành đúc-kết-agent và đưa vào quy trình (gọi sau mỗi việc đáng kể) thì cả đội làm đều, kho dày lên một cách có hệ thống. Đây là động cơ giữ cho kho sống.</p>
+  </div>
+</section>
+
+<!-- 2D. VONG LAP BO SUNG KHO -->
+<section>
+  <span class="sec-num">Phần hai · bổ sung</span>
+  <h2>Vòng lặp nuôi kho từ thực tế</h2>
+  <p class="lead">Đúc-kết-agent rút kinh nghiệm sau <b>một việc</b>. Còn vòng lặp này ở tầng cao hơn: định kỳ gom <b>dữ liệu thật từ nhiều nguồn</b> — bug, ticket khách, sales, marketing, log trace — tìm ra vấn đề lặp lại, rồi bổ sung vào kho. Mỗi nguồn nuôi một phần khác của kho. Đa nguồn này là <b>lợi thế của người chủ biên (CEO)</b> — nhìn được cả nỗi đau khách lẫn tín hiệu kinh doanh mà trong đội không ai gom đủ.</p>
+
+  <div class="loop">
+    <div class="lstep"><span class="ln">1</span><b>Gom tín hiệu</b><p>Bug, ticket khách, sales, marketing, log trace — dồn về một nơi (vd Google Sheets).</p></div>
+    <div class="larrow">→</div>
+    <div class="lstep"><span class="ln">2</span><b>AI tìm pattern</b><p>Lỗi nào lặp nhiều? Phàn nàn nào trùng? Gom thành vấn đề, không phải liệt kê từng cái.</p></div>
+    <div class="larrow">→</div>
+    <div class="lstep"><span class="ln">3</span><b>AI đề xuất</b><p>Biến mỗi pattern thành đề xuất: thêm quy tắc, checklist, hay skill nào.</p></div>
+    <div class="larrow">→</div>
+    <div class="lstep"><span class="ln">4</span><b>Người duyệt</b><p>Chốt cái nào vào kho. Bắt buộc — chặn rác lọt vào.</p></div>
+    <div class="larrow">→</div>
+    <div class="lstep"><span class="ln">5</span><b>Ghi vào kho</b><p>Cập nhật rules / qa-spec / lessons / skill mới.</p></div>
+  </div>
+  <div class="loopback">↻ Kho dày hơn → code &amp; test tốt hơn → <b>ít bug và phàn nàn hơn</b> → vòng sau nhẹ đi. Càng chạy càng khỏe.</div>
+
+  <div class="note-box">
+    <p class="nb-title">Đã chạy thử thật — không phải lý thuyết.</p>
+    <p>Phân tích <b>245 bug</b> thực tế → cô đọng thành <b>7 quy tắc</b> cho kho. ~85% là lỗi logic (test/trace bắt được), tập trung ở khuyến mãi (&gt;40 bug) và sửa–xóa phiếu kho/imei (&gt;50 bug). Nhiều lỗi lặp y hệt qua các tính năng — đúng loại mà một dòng trong kho chặn được từ gốc.</p>
+  </div>
+
+  <h3>Tín hiệu nào đi về đâu trong kho</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Nguồn tín hiệu</th><th>Pattern tìm thấy</th><th>Bổ sung vào</th></tr></thead>
+    <tbody>
+      <tr><td>Tổng hợp bug kỹ thuật</td><td>Một loại lỗi mã lặp lại</td><td><code class="f">qa-code.md</code> / <code class="f">rules/</code></td></tr>
+      <tr><td>Bug nghiệp vụ (tính sai…)</td><td>Một trường hợp nghiệp vụ hay sai</td><td><code class="f">qa-spec.md</code> + <code class="f">lessons.md</code></td></tr>
+      <tr><td>Phản hồi / phàn nàn khách</td><td>Nhiều khách kêu cùng một tính năng</td><td><code class="f">features/&lt;tính-năng&gt;/summarize.md</code></td></tr>
+      <tr><td>Đội kinh doanh (sales)</td><td>Tính năng khách hay đòi · lý do chốt hụt</td><td><code class="f">features/&lt;tính-năng&gt;/summarize.md</code> + <code class="f">qa-spec.md</code></td></tr>
+      <tr><td>Marketing / hỗ trợ</td><td>Cách khách gọi tên &amp; hiểu tính năng; câu hỏi lặp</td><td><code class="f">domain.md</code> + tài liệu hướng dẫn</td></tr>
+      <tr><td>Log trace</td><td>Một dạng case edge hay lọt</td><td>checklist trace / <code class="f">qa-spec.md</code></td></tr>
+      <tr><td>Quy trình làm tay lặp nhiều</td><td>Một việc đáng đóng gói</td><td>skill mới trong <code class="f">skills/</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note-box">
+    <p class="nb-title">Hai giai đoạn — đừng cố tự động hết ngay.</p>
+    <ul>
+      <li><b>Giai đoạn 1 (làm ngay, bán tự động):</b> định kỳ (vd mỗi tuần) gom dữ liệu vào một Sheet, gọi AI phân tích, người duyệt rồi ghi kho. Không cần dev dựng gì — tận dụng luồng ticket sẵn có.</li>
+      <li><b>Giai đoạn 2 (tự động, cần CTO):</b> nối Agent SDK/API để dữ liệu tự chảy về, AI phân tích định kỳ không cần người khởi động. Chỉ giữ lại chốt người duyệt trước khi ghi.</li>
+    </ul>
+  </div>
+  <div class="note-box">
+    <p class="nb-title">Hai chốt không được bỏ.</p>
+    <p><b>1. Người duyệt trước khi ghi</b> — AI đề xuất, người chốt. Tự ghi thẳng thì rác vào kho. <b>2. Gom thành pattern, không nhồi từng cái</b> — một bug không thành một dòng kho; chỉ cái lặp lại hoặc nghiêm trọng mới thành quy tắc. Nếu không, kho phình rác và mất tác dụng.</p>
+  </div>
+</section>
+
+<!-- 3. PHAN TEST NAM O DAU -->
+<section>
+  <span class="sec-num">Phần ba</span>
+  <h2>Phần test nằm ở đâu?</h2>
+  <p class="lead">Đây là chỗ hay nhầm nhất. Test gồm bốn mảnh, nằm ở <b>hai nơi khác nhau</b>. Nguyên tắc cốt lõi: <b>tài liệu chữ thì ở kho, còn code (kể cả code test) thì ở mã nguồn.</b></p>
+  <div class="split">
+    <div class="col kho">
+      <div class="h">Ở KHO tri thức (tài liệu chữ)</div>
+      <div class="b">
+        <ul>
+          <li><b>qa-spec.md</b> — checklist nghiệp vụ: các trường hợp cần đúng, kèm kết quả đúng (vd mua 3 tặng 1 → trả 200k). Đây là <b>“đề bài”</b> để viết test/trace.</li>
+          <li><b>qa-code.md</b> — checklist rà mã: lỗi kỹ thuật hay gặp.</li>
+          <li><b>agents/trace-agent.md</b> — “vai” tự chạy thử các case edge bằng số giả lập, báo lỗi trước khi báo xong.</li>
+          <li><b>memory/local/trace/</b> — log các lần trace đã chạy (để tra lại).</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col code">
+      <div class="h">Ở MÃ NGUỒN (là code, KHÔNG ở kho)</div>
+      <div class="b">
+        <ul>
+          <li><b>File test tự động</b> — nếu dựng test máy thật, file test sống <b>cạnh tính năng trong mã</b>, để tự chạy mỗi khi sửa code. Claude viết và tự đặt đúng chỗ.</li>
+          <li>Không bao giờ để file test trong kho — kho không chạy được code; để cạnh mã thì test mới tự chạy theo mỗi thay đổi.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="note-box">
+    <p class="nb-title">Cách nhớ: đề bài ở kho, máy chấm ở mã.</p>
+    <p><b>qa-spec.md</b> (ở kho) là “đề và đáp án” — cần đúng những gì. <b>File test / trace-agent</b> là “máy chấm” — chạy thử và so kết quả. Đề thì người giữ trong kho; máy chấm thì hoặc là code cạnh mã (test máy), hoặc là vai trace gọi khi cần.</p>
+  </div>
+  <div class="note-box">
+    <p class="nb-title">Hai cách “chấm”, dùng cả hai.</p>
+    <ul>
+      <li><b>Trace</b> (làm ngay, không cần chỉnh hệ thống): AI đọc mã, nhẩm thử case edge theo qa-spec, báo lỗi. Linh hoạt, gọi là chạy. Có sẵn checklist case edge: rollback, retry, race, soft delete, legacy null, input rỗng, cap, đổi trạng thái ngược.</li>
+      <li><b>Test máy</b> (nâng cấp sau, cần CTO chuẩn bị): file test chạy code thật, tự chạy mỗi lần sửa, chắc chắn 100%. Dựng cho phần lõi nhất trước.</li>
+    </ul>
+  </div>
+  <div class="note-box">
+    <p class="nb-title">Test tầng nào trước.</p>
+    <p>Đội từng bỏ test vì leo nhầm ngọn núi khó nhất — test <b>giao diện</b> (đổi nút là hỏng, rất giòn). Làm ngược lại: <b>test tầng LOGIC trước</b> (cho dữ liệu vào, kiểm kết quả ra — không dính nút giao diện), đây là chỗ AI viết test giỏi nhất và ổn định nhất. Giao diện để sau.</p>
+  </div>
+</section>
+
+<!-- 4. BANG TANG -->
+<section>
+  <span class="sec-num">Phần bốn</span>
+  <h2>Bảng tra: các tầng kho tri thức</h2>
+  <div class="legend">
+    <span><i class="dot t-comp"></i> Toàn công ty</span>
+    <span><i class="dot t-proj"></i> Một mảng</span>
+    <span><i class="dot t-feat"></i> Một phân hệ</span>
+    <span><i class="dot t-mem"></i> Trí nhớ</span>
+  </div>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Thành phần</th><th>Định nghĩa</th><th>AI nạp khi nào</th><th>Ai giữ</th><th>Khi nào cập nhật</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag t-comp">README</span></td><td>Bản đồ định tuyến: gặp việc gì thì dùng vai nào, nạp file nào.</td><td>Đầu tiên, mọi việc.</td><td>Lead kỹ thuật</td><td>Khi thêm vai/mảng mới.</td></tr>
+      <tr><td><span class="tag t-comp">CONVENTIONS</span></td><td>Quy ước đặt tên file, ngôn ngữ, cách thêm mới.</td><td>Khi thêm/sửa file trong kho.</td><td>Lead kỹ thuật</td><td>Hiếm.</td></tr>
+      <tr><td><span class="tag t-comp">rules</span></td><td>Quy tắc cho <b>mọi mảng</b>: code, git, build, dữ liệu.</td><td>Luôn nạp.</td><td>Lead / CTO</td><td>Khi đổi chuẩn chung (hiếm).</td></tr>
+      <tr><td><span class="tag t-comp">agents</span></td><td>Các “vai” đóng gói quy trình sẵn.</td><td>Khi gọi đúng vai.</td><td>Lead kỹ thuật</td><td>Khi quy trình đổi / thêm vai.</td></tr>
+      <tr><td><span class="tag t-proj">projects/&lt;mảng&gt;</span></td><td>Tri thức riêng một mảng lớn: kiến trúc, chuẩn mã, QA, thuật ngữ, bài học.</td><td>Khi làm trong mảng đó.</td><td>Lead của mảng</td><td>Khi kiến trúc/chuẩn mảng đổi.</td></tr>
+      <tr><td><span class="tag t-feat">features/&lt;tính-năng&gt;/</span></td><td>summarize.md + flow.md — tóm tắt &amp; luồng từng tính năng (trong từng mảng; README ở đầu cây là mục lục).</td><td>Khi cần hiểu / làm / test 1 tính năng.</td><td>Người thạo tính năng</td><td>Mỗi khi tính năng đổi (một phần của XONG).</td></tr>
+      <tr><td><span class="tag t-feat">qa-spec</span></td><td>Checklist nghiệp vụ — đề bài cho test &amp; trace.</td><td>Trước khi báo xong; làm gốc viết test.</td><td>Người thạo phân hệ + tester</td><td>Khi có trường hợp nghiệp vụ mới.</td></tr>
+      <tr><td><span class="tag t-mem">memory</span></td><td>Trí nhớ xuyên suốt: quyết định chung, quy tắc từ phản hồi, log trace.</td><td>Khi cần tra “lần trước xử thế nào”.</td><td>Cả đội (ai gặp thì ghi)</td><td><b>Liên tục.</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="lead" style="margin-top:12px"><b>Lưu ý về bài học (lessons):</b> lỗi riêng một mảng → để trong <code class="f">projects/&lt;mảng&gt;/lessons.md</code>. Chỉ thứ xuyên suốt mọi mảng mới lên <code class="f">memory/</code> gốc. Tránh để memory gốc phình to lẫn lộn việc của mọi mảng.</p>
+</section>
+
+<!-- 5. RULES CHUNG HAY PATTERNS RIENG -->
+<section>
+  <span class="sec-num">Phần năm</span>
+  <h2>Lằn ranh: rules chung hay patterns riêng?</h2>
+  <p class="lead">Khi có nhiều mảng, sẽ có lúc lẫn: một quy tắc nên để ở <code class="f">rules/</code> (chung) hay <code class="f">projects/&lt;mảng&gt;/patterns.md</code> (riêng)? Quy tắc quyết định đơn giản:</p>
+  <div class="note-box">
+    <p class="nb-title">Dùng cho từ 2 mảng trở lên → <code class="f">rules/</code>. Chỉ một mảng → patterns của mảng đó.</p>
+    <ul>
+      <li><b>rules/ (chung):</b> "tên biến viết thường", "mọi thao tác xóa phải hỏi xác nhận", "tiền hiển thị có dấu phân cách". Áp dụng ở đâu cũng đúng.</li>
+      <li><b>patterns riêng mảng:</b> "mảng SCRM xử lý hàng đợi theo cách này", "mảng giao vận gọi dịch vụ ngoài theo mẫu kia". Chỉ đúng trong mảng đó.</li>
+    </ul>
+  </div>
+  <p class="lead">Nguyên tắc phụ: nếu một quy tắc riêng mảng bắt đầu lặp ở mảng thứ hai → cân nhắc nâng lên <code class="f">rules/</code>. Đừng chép cùng một quy tắc vào nhiều mảng — dễ sửa chỗ này quên chỗ kia.</p>
+</section>
+
+<!-- 5B. KY LUAT DAT TEN -->
+<section>
+  <span class="sec-num">Phần năm · bổ sung</span>
+  <h2>Kỷ luật đặt tên: chống “loạn cào cào”</h2>
+  <p class="lead">Một bệnh quản trị điển hình: mỗi người đặt tên một kiểu — tên file, tên trường dữ liệu tây ta lẫn lộn, từ ngữ tối nghĩa. Một hồi không ai hiểu của ai, AI cũng đoán sai. Chữa bằng vài quy ước cứng trong <code class="f">CONVENTIONS.md</code>, ai cũng theo:</p>
+  <div class="note-box">
+    <p class="nb-title">Quy ước đặt tên (ví dụ — đội tự chốt rồi ghi cứng).</p>
+    <ul>
+      <li><b>Tên file kho:</b> tiếng Anh, chữ thường, nối bằng gạch ngang. Vd <code class="f">qa-spec.md</code>, không phải <code class="f">QA_Spec.md</code> hay <code class="f">kiemtra.md</code>.</li>
+      <li><b>Tên trường dữ liệu / biến:</b> chọn MỘT ngôn ngữ và theo nhất quán — không nửa Anh nửa Việt (<code class="f">soLuong</code> + <code class="f">quantity</code> lẫn lộn là cấm).</li>
+      <li><b>Không viết tắt tối nghĩa:</b> <code class="f">tongTienKhuyenMai</code> rõ hơn <code class="f">ttkm</code>. Tên dài mà hiểu được hơn tên ngắn mà phải đoán.</li>
+      <li><b>Nội dung tài liệu:</b> tiếng Việt, không viết tắt — để cả người không kỹ thuật đọc cũng hiểu.</li>
+    </ul>
+  </div>
+  <div class="note-box">
+    <p class="nb-title">Vì sao đây không phải chuyện nhỏ.</p>
+    <p>Tên loạn làm AI đoán sai (không biết <code class="f">ttkm</code> là gì), làm người mới mất thời gian dịch, và làm code mỗi màn một phong cách. Khi quy ước nằm trong kho, AI tự đặt tên đúng chuẩn mọi lần — vấn đề “loạn cào cào” được chặn từ gốc, không cần đi nhắc từng người.</p>
+  </div>
+</section>
+
+<!-- 6. NEN KHONG NEN -->
+<section>
+  <span class="sec-num">Phần sáu</span>
+  <h2>Nên &amp; không nên</h2>
+  <div class="rule-do"><b>✓ Bắt đầu nhỏ.</b><p>Một README + vài quy tắc quan trọng nhất là đủ chạy. Đầy dần theo thực tế.</p></div>
+  <div class="rule-do"><b>✓ Mỗi lỗi gặp → một dòng vào lessons.</b><p>Lỗi riêng mảng vào lessons của mảng; lỗi xuyên suốt vào memory gốc. Đây là cách kho tự khôn lên — mỗi lỗi là một liều vắc-xin cho cả đội.</p></div>
+  <div class="rule-do"><b>✓ File nhỏ, trỏ nhau qua README.</b><p>Dễ nạp, dễ sửa, ít xung đột khi nhiều người cùng cập nhật.</p></div>
+  <div class="rule-do"><b>✓ Đặt chung trong mã nguồn.</b><p>Tự đồng bộ — không ai dùng bản cũ. Đây là sửa lỗi quan trọng nhất so với cách tải lên/tải về hiện tại.</p></div>
+  <div class="rule-dont"><b>✗ Đừng gom hết vào một file khổng lồ.</b><p>AI nạp thì loãng, người ngại sửa, dễ xung đột.</p></div>
+  <div class="rule-dont"><b>✗ Đừng chép lại chi tiết đã có trong mã.</b><p>Chi tiết tính năng để trong mã (luôn đúng). Kho chỉ giữ bản đồ &amp; quy tắc.</p></div>
+  <div class="rule-dont"><b>✗ Đừng để file test trong kho.</b><p>File test là code — phải nằm cạnh mã để tự chạy. Kho chỉ giữ checklist (đề bài) và vai trace.</p></div>
+  <div class="rule-dont"><b>✗ Đừng để file không có người chủ.</b><p>Không ai giữ → dần sai lệch thực tế → cả đội mất niềm tin vào kho.</p></div>
+</section>
+
+<!-- 7. QUY TRINH THEO CAP -->
+<section>
+  <span class="sec-num">Phần bảy</span>
+  <h2>Quy trình theo cấp độ &amp; cờ leo thang</h2>
+  <p class="lead">Không cào bằng: việc dễ đi nhanh, việc khó/nguy hiểm đi đủ phanh. Cấp độ đặt <b>baseline</b> quy trình; nhưng quyết định cuối theo <b>rủi ro = độ khó + bán kính ảnh hưởng</b> — một sửa nhỏ vào chỗ nguy hiểm vẫn phải đi quy trình nặng.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Cấp</th><th>Loại việc</th><th>Bắt buộc qua (cộng dồn)</th></tr></thead>
+    <tbody>
+      <tr><td><b>L1</b> rất dễ</td><td>đổi text/nhãn, ẩn/hiện · sắp xếp trường (chỉ FE, ~1–2h)</td><td>convention tự áp + tự soát · review nhẹ. Không cần trace/test. Cập nhật cẩm nang nếu đổi hành vi.</td></tr>
+      <tr><td><b>L2</b> dễ</td><td>lọc/tìm/export đơn giản, sửa nhỏ logic, thêm trường form có sẵn (~2–4h)</td><td>+ review-agent đầy đủ + trace phần logic + vài case test (nếu có logic).</td></tr>
+      <tr><td><b>L3</b> trung bình<br><span style="color:var(--clay);font-size:12px">ngưỡng "qua đủ quy tắc"</span></td><td>logic nghiệp vụ nhỏ, API mới đơn giản, thêm field DB, phân quyền cơ bản (~1–2 ngày)</td><td>+ dò ảnh hưởng (impact) + test logic từ qa-spec + cập nhật cẩm nang (tóm tắt + luồng) — <b>bắt buộc</b>.</td></tr>
+      <tr><td><b>L4</b> khó</td><td>nghiệp vụ phức tạp, nhiều màn/luồng, báo cáo phức tạp, RBAC, đồng bộ nội bộ (~3–5 ngày)</td><td>+ duyệt kế hoạch TRƯỚC khi code + checklist case biên đầy đủ + chia nhỏ task + lead duyệt ở cổng.</td></tr>
+      <tr><td><b>L5</b> rất khó</td><td>module mới, tích hợp bên thứ 3, đổi kiến trúc, realtime đa hệ thống (&gt;1 tuần)</td><td>+ spike trước rồi mới chốt + duyệt thiết kế với CTO + giao theo giai đoạn + test máy cho phần lõi. Tách thành chuỗi, không để 1 task.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note-box">
+    <p class="nb-title">Cờ leo thang — gate theo rủi ro, không chỉ độ khó.</p>
+    <p>Nếu task <b>chạm vào</b> một trong các vùng dưới → áp <b>tối thiểu quy trình L3</b> (đủ cổng + impact + checklist case biên), dù công sức chỉ L1–L2:</p>
+    <ul>
+      <li>Tiền / thanh toán / hóa đơn / kế toán</li>
+      <li>Khuyến mãi · kho/tồn/imei · rollback đơn</li>
+      <li>Filter multi-tenant (IdDonVi) — rủi ro rò dữ liệu chéo tenant</li>
+      <li>Đổi schema / migration DB</li>
+      <li>Tích hợp bên ngoài (sàn · ĐVVC · ZNS · MISA/Viettel)</li>
+      <li>Phân quyền (RBAC)</li>
+    </ul>
+    <p>Đây đúng mấy vùng dồn bug trong phân tích 245 lỗi — "nhìn dễ mà gãy nặng".</p>
+  </div>
+
+  <div class="note-box">
+    <p class="nb-title">Chỗ để mọi thứ.</p>
+    <ul>
+      <li><b>Level + cờ rủi ro</b> → frontmatter / metadata của task.</li>
+      <li><b>Bậc thang quy trình</b> → <code class="f">rules/quy-trinh-theo-level.md</code> (định nghĩa "XONG" theo cấp).</li>
+      <li><b>Bán kính ảnh hưởng</b> → lấy từ ô "Ảnh hưởng tới" của cẩm nang.</li>
+    </ul>
+    <p>Level cũng chính là cỡ S/M/L: L1–2 = S · L3 = M · L4–5 = L → nối thẳng vào WIP &amp; cách giao việc (L1–2 độc lập, song song; L4–5 tuần tự, chia nhỏ).</p>
+  </div>
+</section>
+
+<!-- KEY -->
+<section>
+  <div class="callout">
+    <b>Quy tắc một câu để nhớ</b>
+    <p>Kho tri thức = tấm bản đồ, không phải quyển bách khoa. Nó chỉ đường cho AI tới đúng chỗ trong mã, đặt luật chung, và lưu bài học. Đề bài test ở kho, máy chấm (code test) ở mã. File nhỏ, trỏ nhau, nằm chung mã, có người giữ, cập nhật liên tục.</p>
+  </div>
+</section>
+
+</div>
+
+<footer>SandBoxVN · Cấu trúc Kho tri thức · Tài liệu chuẩn nội bộ</footer>
+
+</body>
+</html>

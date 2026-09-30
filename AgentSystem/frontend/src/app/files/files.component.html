@@ -1,0 +1,73 @@
+<div class="files-layout">
+
+  <header class="files-header">
+    <span class="files-title">📁 File Manager</span>
+  </header>
+
+
+      <div class="browse-bar">
+        <input
+          class="browse-input"
+          type="text"
+          placeholder="Đường dẫn thư mục gốc..."
+          [(ngModel)]="rootDir"
+          (keyup.enter)="openRoot()"
+        />
+        <button class="btn-open" (click)="openRoot()" [disabled]="rootLoading">
+          {{ rootLoading ? '...' : 'Mở' }}
+        </button>
+      </div>
+
+      <div class="error-bar" *ngIf="rootError">{{ rootError }}</div>
+
+      <div class="files-body">
+
+    <!-- Left: lazy tree -->
+    <div class="tree-panel">
+      <div class="tree-hint" *ngIf="!tree.length && !rootLoading">
+        Nhập đường dẫn thư mục và nhấn Mở
+      </div>
+      <ng-container *ngTemplateOutlet="nodeList; context: { nodes: tree, depth: 0 }"></ng-container>
+    </div>
+
+    <!-- Right: file viewer -->
+    <div class="viewer-panel">
+      <div class="viewer-empty" *ngIf="!selectedPath && !fileLoading">
+        Chọn file để xem nội dung
+      </div>
+      <div class="viewer-loading" *ngIf="fileLoading">Đang đọc...</div>
+      <ng-container *ngIf="selectedPath && !fileLoading">
+        <div class="viewer-path">{{ selectedPath }}</div>
+        <div class="viewer-body">
+          <pre class="viewer-code"><code>{{ selectedContent }}</code></pre>
+        </div>
+      </ng-container>
+    </div>
+
+      </div><!-- /files-body -->
+
+</div>
+
+<!-- Recursive node template -->
+<ng-template #nodeList let-nodes="nodes" let-depth="depth">
+  <div *ngFor="let node of nodes">
+    <div
+      class="tree-node"
+      [class.is-folder]="node.isFolder"
+      [class.is-file]="!node.isFolder"
+      [class.selected]="selectedPath === node.path"
+      [style.paddingLeft.px]="12 + depth * 16"
+      (click)="node.isFolder ? toggleFolder(node) : selectFile(node)"
+    >
+      <span class="node-toggle" *ngIf="node.isFolder">
+        <span *ngIf="node.loading">⟳</span>
+        <span *ngIf="!node.loading">{{ node.expanded ? '▾' : '▸' }}</span>
+      </span>
+      <span class="node-icon" *ngIf="!node.isFolder">{{ getFileIcon(node.name) }}</span>
+      <span class="node-name">{{ node.name }}</span>
+    </div>
+    <ng-container *ngIf="node.isFolder && node.expanded && node.children">
+      <ng-container *ngTemplateOutlet="nodeList; context: { nodes: node.children, depth: depth + 1 }"></ng-container>
+    </ng-container>
+  </div>
+</ng-template>

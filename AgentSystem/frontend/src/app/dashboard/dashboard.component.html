@@ -1,0 +1,44 @@
+<div class="dash-layout">
+
+  <header class="dash-header">
+    <span class="dash-logo">🤖 AI Agent System</span>
+    <div class="dash-right">
+      <span class="dash-user">{{ auth.getCurrentUser()?.username }}</span>
+      <button class="btn-ghost" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <h1 class="dash-title">Dashboard</h1>
+    <p class="dash-sub">Chọn công cụ để bắt đầu</p>
+
+    <div class="card-grid">
+
+      <div class="card" (click)="go('/')">
+        <div class="card-icon">💬</div>
+        <div class="card-name">BA Agent</div>
+        <div class="card-desc">Chat với AI để thu thập yêu cầu và sinh JSON spec</div>
+      </div>
+
+      <div class="card" (click)="go('/orchestrator')">
+        <div class="card-icon">⚙️</div>
+        <div class="card-name">Orchestrator</div>
+        <div class="card-desc">Chạy pipeline BA → DEV → QA tự động từ một yêu cầu</div>
+      </div>
+
+      <div class="card" (click)="go('/logs')">
+        <div class="card-icon">📋</div>
+        <div class="card-name">Logs</div>
+        <div class="card-desc">Xem lịch sử các lần gọi agent: BA, DEV, QA</div>
+      </div>
+
+      <div class="card" (click)="go('/files')">
+        <div class="card-icon">📁</div>
+        <div class="card-name">File Manager</div>
+        <div class="card-desc">Xem cây thư mục và nội dung các file đã sinh ra</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

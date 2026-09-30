@@ -1,0 +1,31 @@
+# Plan: {tên task}
+
+> Copy khuôn này → `memory/local/{task}.md` khi lập plan cho task đụng logic. Đủ các khối dưới (theo CLAUDE.md "Definition of DONE" + "Plans"). **Lập xong → TRÌNH cho user + CHỜ DUYỆT rồi mới code** (không tự cắt scope).
+
+## 1. Nguồn đã NẮM (Pha 1 — CITE để chứng minh đã đọc kho, KHÔNG nhảy thẳng vào source)
+- **CodeMap/Ripgrep** định vị: <class/service/file đụng tới> (SCRM bắt buộc codemap; down → hỏi user menu scan/grep/skip)
+- **Registry node**: `registry/<module>/<Controller>.md` → hành vi đúng + **ripple `cross_module_out`** (đổi X gãy đâu) + known-issue
+- **Feature doc**: `features/<module>/<A>/` (summarize/dev) → nghiệp vụ + cạm bẫy
+- ⚠️ **Verify với code HIỆN TẠI**: path:line/field/behavior trong kho là *snapshot* → mở source xác nhận (code là chân lý, kho là bản đồ)
+
+## 2. Scope
+- Phạm vi: <rõ ràng>
+- ⚠️ Nếu **thu hẹp** so với yêu cầu (vd task FE+BE+DB mà chỉ làm BE) → **HỎI user trước**, không tự cắt.
+
+## 3. Việc cần làm + paths
+- Path BE/FE (**đã confirm với user** — cẩn thận `_SourceForBak`=backup vs source thật): ...
+- Bước 1: ...
+- Bước 2: ...
+- DB (nếu có): script → `memory/local/sql/` (KHÔNG commit `.sql`, không FK/INDEX)
+
+## 4. Acceptance + edge case  (← blueprint cho Trace)
+- AC1: ...
+- Edge: <null / vượt cap / trạng thái ngược / non-admin / ...>
+
+## 5. QA (BẮT BUỘC — 1 phần của plan, không bỏ)
+- **Review** (`review-agent`): check convention + spec (qa-code/qa-spec) → sửa lỗi.
+- **Trace** (`trace-agent`): mô phỏng data số cụ thể chạy QUA code, bám AC mục 4 → report `memory/local/trace/`.
+- **Confirm**: báo cáo TÁCH Review / Trace (ghi rõ đã-spawn-agent hay chưa). KHÔNG mời commit.
+
+## 6. Errors / blockers
+- ...

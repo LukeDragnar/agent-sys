@@ -1,0 +1,13 @@
+{
+  "name": "agent-system-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server kết nối Claude Code terminal với AgentService web",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

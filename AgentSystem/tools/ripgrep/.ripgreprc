@@ -1,0 +1,30 @@
+# Ripgrep config for AgentSystem (BE + FE + all paths)
+# Usage: rg --config-path .ripgreprc <pattern>
+
+# Smart case matching
+--smart-case
+
+# Show context
+--context=2
+
+# Exclude common folders
+--glob=!node_modules
+--glob=!.git
+--glob=!dist
+--glob=!build
+--glob=!bin
+--glob=!obj
+--glob=!coverage
+--glob=!.vscode
+--glob=!.claude
+
+# Exclude build artifacts
+--glob=!*.min.js
+--glob=!*.min.css
+--glob=!*.bundle.js
+
+# Color output
+--color=always
+
+# Max results
+--max-count=100

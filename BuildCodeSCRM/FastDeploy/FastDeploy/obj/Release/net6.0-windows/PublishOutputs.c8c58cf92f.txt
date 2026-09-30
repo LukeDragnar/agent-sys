@@ -1,0 +1,5 @@
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Release\net6.0-windows\publish\FastDeploy.exe
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Release\net6.0-windows\publish\FastDeploy.dll
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Release\net6.0-windows\publish\FastDeploy.deps.json
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Release\net6.0-windows\publish\FastDeploy.runtimeconfig.json
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Release\net6.0-windows\publish\FastDeploy.pdb

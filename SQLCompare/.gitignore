@@ -1,0 +1,11 @@
+bin/
+obj/
+publish/
+*.user
+.vs/
+*.sql
+
+# Saved connection/project files — chứa server/DB/password thật, KHÔNG commit
+ConnectSave/
+*.sqlcmp
+*.sqldcmp

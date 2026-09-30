@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "agent-system": {
+      "command": "node",
+      "args": ["mcp/server.js"],
+      "env": {
+        "AGENT_API_URL": "http://localhost:5137",
+        "AGENT_USERNAME": "admin",
+        "AGENT_PASSWORD": "Admin@123"
+      }
+    }
+  }
+}

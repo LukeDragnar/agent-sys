@@ -1,0 +1,141 @@
+<div class="tb-layout" *ngIf="!loading; else loadingTpl">
+
+  <!-- Header + Filters -->
+  <div class="tb-header">
+    <h1>Token Budget</h1>
+    <div class="filter-bar">
+      <button class="btn-range" [class.active]="activeRange === 'week'" (click)="setThisWeek()">Tuần này</button>
+      <button class="btn-range" [class.active]="activeRange === 'month'" (click)="setThisMonth()">Tháng này</button>
+      <div class="date-inputs">
+        <input type="date" [(ngModel)]="filterFrom" />
+        <span class="date-sep">→</span>
+        <input type="date" [(ngModel)]="filterTo" />
+        <button class="btn-primary btn-sm" (click)="applyCustom()">Lọc</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Range label -->
+  <div class="range-label">{{ rangeLabel }}</div>
+
+  <!-- Summary Cards -->
+  <div class="cards" *ngIf="totals">
+    <div class="card">
+      <div class="card-label">Total Tokens</div>
+      <div class="card-value">{{ formatTokens(totals.totalTokens) }}</div>
+      <div class="card-detail">
+        <span>In: {{ formatTokens(totals.totalInput) }}</span>
+        <span>Out: {{ formatTokens(totals.totalOutput) }}</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Sessions</div>
+      <div class="card-value">{{ totals.sessionCount }}</div>
+      <div class="card-detail">conversations</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Members</div>
+      <div class="card-value">{{ totals.gitUserCount }}</div>
+      <div class="card-detail">git users</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Avg / Session</div>
+      <div class="card-value">{{ totals.sessionCount > 0 ? formatTokens(Math.round(totals.totalTokens / totals.sessionCount)) : '0' }}</div>
+      <div class="card-detail">tokens</div>
+    </div>
+  </div>
+
+  <!-- Two columns -->
+  <div class="two-col">
+
+    <!-- Daily Trend -->
+    <div class="panel">
+      <h2>Token theo ngày</h2>
+      <div class="chart">
+        <div class="chart-bars">
+          <div class="bar-col" *ngFor="let d of dailyTrend; let last = last">
+            <div class="bar-tooltip">
+              {{ formatTokens(d.totalTokens) }} tokens · {{ d.conversationCount }} conv
+            </div>
+            <div class="bar-stack">
+              <div class="bar bar-out" [style.height.%]="barHeight(d.outputTokens)"></div>
+              <div class="bar bar-in" [style.height.%]="barHeight(d.inputTokens)"></div>
+            </div>
+            <div class="bar-label">
+              <span class="bar-day">{{ dayLabel(d.date) }}</span>
+              <span class="bar-date">{{ dayDate(d.date) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-dot in"></span> Input</span>
+          <span class="legend-item"><span class="legend-dot out"></span> Output</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="panel">
+      <h2>Leaderboard — Git Users</h2>
+      <div class="lb-list">
+        <div class="lb-item" *ngFor="let u of users; let i = index">
+          <div class="lb-rank" [class.top3]="i < 3">{{ i + 1 }}</div>
+          <div class="lb-info">
+            <div class="lb-name">{{ u.gitUser || '(no git user)' }}</div>
+            <div class="lb-bar-wrap">
+              <div class="lb-bar" [style.width.%]="userBarWidth(u.totalTokens)"></div>
+            </div>
+          </div>
+          <div class="lb-right">
+            <span class="lb-total">{{ formatTokens(u.totalTokens) }}</span>
+            <span class="lb-meta">{{ u.sessionCount }} sess</span>
+          </div>
+        </div>
+        <div class="empty" *ngIf="users.length === 0">Không có dữ liệu.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Sessions -->
+  <div class="panel full">
+    <h2>Top Conversations</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Session</th>
+            <th>Git User</th>
+            <th>Agent</th>
+            <th>Msgs</th>
+            <th>Input</th>
+            <th>Output</th>
+            <th>Total</th>
+            <th>Ngày tạo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of topSessions; let i = index">
+            <td class="rank">{{ i + 1 }}</td>
+            <td class="session-title" [title]="s.sessionTitle">{{ s.sessionTitle }}</td>
+            <td><span class="badge-user">{{ s.gitUser || '—' }}</span></td>
+            <td><span class="badge-agent">{{ s.agentType }}</span></td>
+            <td class="num">{{ s.messageCount }}</td>
+            <td class="num">{{ formatTokens(s.inputTokens) }}</td>
+            <td class="num">{{ formatTokens(s.outputTokens) }}</td>
+            <td class="num total">{{ formatTokens(s.totalTokens) }}</td>
+            <td class="small">{{ s.createdAt | date:'dd/MM HH:mm' }}</td>
+          </tr>
+          <tr *ngIf="topSessions.length === 0">
+            <td colspan="9" class="empty">Không có dữ liệu.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading">Đang tải dữ liệu...</div>
+</ng-template>

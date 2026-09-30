@@ -1,0 +1,16 @@
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\FastDeploy.Form1.resources
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\FastDeploy.csproj.GenerateResource.cache
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\FastDeploy.GeneratedMSBuildEditorConfig.editorconfig
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\FastDeploy.AssemblyInfoInputs.cache
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\FastDeploy.AssemblyInfo.cs
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\FastDeploy.csproj.CoreCompileInputs.cache
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Debug\net6.0-windows\FastDeploy.exe
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Debug\net6.0-windows\FastDeploy.deps.json
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Debug\net6.0-windows\FastDeploy.runtimeconfig.json
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Debug\net6.0-windows\FastDeploy.dll
+D:\Project\Tool\FastDeploy\FastDeploy\bin\Debug\net6.0-windows\FastDeploy.pdb
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\FastDeploy.dll
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\refint\FastDeploy.dll
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\FastDeploy.pdb
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\FastDeploy.genruntimeconfig.cache
+D:\Project\Tool\FastDeploy\FastDeploy\obj\Debug\net6.0-windows\ref\FastDeploy.dll

@@ -1,0 +1,195 @@
+<Window x:Class="SqlCompareSuite.App.Views.ProjectSetupDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Data sources" Width="760" Height="640" MinHeight="420" MinWidth="620"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        Background="{StaticResource RgContentBg}">
+    <DockPanel>
+        <!-- ===== Header xanh gradient: Source | Target ===== -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource RgBanner}" Height="64">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <!-- Source -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                    <TextBlock Text="🛢" FontSize="26" Foreground="White" VerticalAlignment="Center" />
+                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="Source" Foreground="White" FontWeight="Bold" FontSize="16" />
+                        <TextBlock Text="Database you compare FROM" Foreground="#FBE0EC" FontSize="11" />
+                    </StackPanel>
+                </StackPanel>
+                <!-- Target (nền xanh đậm hơn) -->
+                <Border Grid.Column="1" Background="#C9527F">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                        <TextBlock Text="🛢" FontSize="26" Foreground="White" VerticalAlignment="Center" />
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Target" Foreground="White" FontWeight="Bold" FontSize="16" />
+                            <TextBlock Text="Database you deploy TO" Foreground="#FBE0EC" FontSize="11" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ===== Footer tối: Save / Save as / Swap (trái) — OK / Cancel (phải) ===== -->
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource RgDark}" Padding="12,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button x:Name="SaveButton" Content="💾 Save" Click="SaveButton_Click"
+                            MinWidth="80" Margin="0,0,6,0" ToolTip="Lưu project (ghi đè file hiện tại)" />
+                    <Button x:Name="SaveAsButton" Content="Save as…" Click="SaveAsButton_Click"
+                            MinWidth="80" Margin="0,0,6,0" ToolTip="Lưu project ra file mới" />
+                    <Button x:Name="SwapButton" Content="⇄ Swap" Click="SwapButton_Click"
+                            MinWidth="70" ToolTip="Hoán đổi Source ⇄ Target" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="OkButton" Content="OK" Style="{StaticResource PrimaryButton}"
+                            Click="OkButton_Click" MinWidth="90" Margin="0,0,8,0" />
+                    <Button x:Name="CancelButton" Content="Cancel" Click="CancelButton_Click"
+                            MinWidth="90" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ===== Tabs: Data sources | Tables & Views ===== -->
+        <TabControl Margin="10,8,10,8">
+          <TabItem Header="Data sources">
+           <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <!-- ===== 2 cột nhập: Source | Target ===== -->
+            <Grid Margin="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ===== SOURCE column ===== -->
+            <Border Grid.Column="0" BorderBrush="#DDDDDD" BorderThickness="1"
+                    Background="White" CornerRadius="4" Padding="12">
+                <StackPanel>
+                    <TextBlock Text="Server" FontWeight="SemiBold" Margin="0,0,0,3" />
+                    <ComboBox x:Name="SrcServerBox" IsEditable="True" Margin="0,0,0,10"
+                              ToolTip="Gõ hoặc chọn server đã dùng gần đây" />
+
+                    <TextBlock Text="Authentication" FontWeight="SemiBold" Margin="0,0,0,3" />
+                    <RadioButton x:Name="SrcWindowsAuthRadio" Content="Windows authentication"
+                                 GroupName="SrcAuth" IsChecked="True"
+                                 Checked="SrcAuthRadio_Changed" Margin="0,2" />
+                    <RadioButton x:Name="SrcSqlAuthRadio" Content="SQL Server authentication"
+                                 GroupName="SrcAuth"
+                                 Checked="SrcAuthRadio_Changed" Margin="0,2,0,8" />
+
+                    <TextBlock Text="User name" Margin="0,0,0,3" />
+                    <TextBox x:Name="SrcUserBox" IsEnabled="False" Margin="0,0,0,8" />
+
+                    <TextBlock Text="Password" Margin="0,0,0,3" />
+                    <PasswordBox x:Name="SrcPasswordBox" IsEnabled="False" Margin="0,0,0,4" />
+                    <CheckBox x:Name="SrcSavePasswordChk" Content="Save password"
+                              IsEnabled="False" Margin="0,0,0,10" />
+
+                    <TextBlock Text="Database" FontWeight="SemiBold" Margin="0,0,0,3" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="SrcDatabaseBox" Grid.Column="0" IsEditable="True" />
+                        <Button x:Name="SrcRefreshButton" Grid.Column="1" Content="🔄"
+                                MinWidth="0" Padding="8,0" Margin="6,0,0,0"
+                                Click="SrcRefreshButton_Click" ToolTip="Refresh databases" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button x:Name="SrcTestButton" Content="Test" MinWidth="60"
+                                Click="SrcTestButton_Click" />
+                        <TextBlock Text="Create..." Foreground="#90A4AE" Margin="12,0,0,0"
+                                   VerticalAlignment="Center" ToolTip="Not available" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ===== TARGET column ===== -->
+            <Border Grid.Column="2" BorderBrush="#DDDDDD" BorderThickness="1"
+                    Background="White" CornerRadius="4" Padding="12">
+                <StackPanel>
+                    <TextBlock Text="Server" FontWeight="SemiBold" Margin="0,0,0,3" />
+                    <ComboBox x:Name="TgtServerBox" IsEditable="True" Margin="0,0,0,10"
+                              ToolTip="Gõ hoặc chọn server đã dùng gần đây" />
+
+                    <TextBlock Text="Authentication" FontWeight="SemiBold" Margin="0,0,0,3" />
+                    <RadioButton x:Name="TgtWindowsAuthRadio" Content="Windows authentication"
+                                 GroupName="TgtAuth" IsChecked="True"
+                                 Checked="TgtAuthRadio_Changed" Margin="0,2" />
+                    <RadioButton x:Name="TgtSqlAuthRadio" Content="SQL Server authentication"
+                                 GroupName="TgtAuth"
+                                 Checked="TgtAuthRadio_Changed" Margin="0,2,0,8" />
+
+                    <TextBlock Text="User name" Margin="0,0,0,3" />
+                    <TextBox x:Name="TgtUserBox" IsEnabled="False" Margin="0,0,0,8" />
+
+                    <TextBlock Text="Password" Margin="0,0,0,3" />
+                    <PasswordBox x:Name="TgtPasswordBox" IsEnabled="False" Margin="0,0,0,4" />
+                    <CheckBox x:Name="TgtSavePasswordChk" Content="Save password"
+                              IsEnabled="False" Margin="0,0,0,10" />
+
+                    <TextBlock Text="Database" FontWeight="SemiBold" Margin="0,0,0,3" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="TgtDatabaseBox" Grid.Column="0" IsEditable="True" />
+                        <Button x:Name="TgtRefreshButton" Grid.Column="1" Content="🔄"
+                                MinWidth="0" Padding="8,0" Margin="6,0,0,0"
+                                Click="TgtRefreshButton_Click" ToolTip="Refresh databases" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button x:Name="TgtTestButton" Content="Test" MinWidth="60"
+                                Click="TgtTestButton_Click" />
+                        <TextBlock Text="Create..." Foreground="#90A4AE" Margin="12,0,0,0"
+                                   VerticalAlignment="Center" ToolTip="Not available" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            </Grid>
+           </ScrollViewer>
+          </TabItem>
+
+          <!-- ===== Tab chọn bảng để compare (Redgate "Tables & Views") ===== -->
+          <TabItem Header="Tables &amp; Views">
+            <Grid Margin="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button x:Name="LoadTablesTabButton" Content="🔄 Load tables"
+                            Click="LoadTablesTab_Click" MinWidth="120"
+                            ToolTip="Liệt kê bảng chung 2 DB (cần nhập Server + Database ở tab Data sources)" />
+                    <Button Content="Select all" Click="TablesSelectAll_Click" Margin="8,0,0,0" />
+                    <Button Content="Select none" Click="TablesSelectNone_Click" Margin="4,0,0,0" />
+                    <TextBlock x:Name="TablesHint" VerticalAlignment="Center" Margin="14,0,0,0" Foreground="#888"
+                               Text="Chưa load / chọn hết = so TẤT CẢ bảng. Load rồi bỏ tick để loại bảng khỏi compare." />
+                </StackPanel>
+                <Border Grid.Row="1" BorderBrush="#DDDDDD" BorderThickness="1" Background="White">
+                    <ListBox x:Name="TablePickList" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding Name}"
+                                          IsChecked="{Binding Include, Mode=TwoWay}" Margin="2,1" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+            </Grid>
+          </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

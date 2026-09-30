@@ -1,0 +1,96 @@
+<div class="ph-bar">
+  <div class="ph-left">
+    <button class="ph-toggle" (click)="dropdownOpen = !dropdownOpen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2"/>
+        <path d="M8 21h8"/><path d="M12 17v4"/>
+      </svg>
+      <span *ngIf="selectedProjects.length === 0" class="ph-label muted">Chưa chọn project</span>
+      <span *ngIf="selectedProjects.length > 0" class="ph-label">{{ headerLabel }}</span>
+      <svg class="ph-chevron" [class.open]="dropdownOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+
+    <!-- Active badges -->
+    <div class="ph-badges" *ngIf="selectedProjects.length > 0 && !dropdownOpen">
+      <span *ngFor="let p of selectedProjects" class="ph-badge">
+        {{ p.name }}
+        <span *ngIf="moduleCountLabel(p.id)" class="ph-badge-mod">{{ moduleCountLabel(p.id) }}</span>
+      </span>
+    </div>
+  </div>
+
+  <a class="ph-manage" routerLink="/projects" title="Quản lý projects">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 1 21 12a10 10 0 0 1-1.93 5.07M4.93 4.93A10 10 0 0 0 3 12a10 10 0 0 0 1.93 5.07"/></svg>
+    Cài đặt
+  </a>
+</div>
+
+<!-- Dropdown -->
+<div *ngIf="dropdownOpen" class="ph-dropdown">
+  <div *ngIf="projects.length === 0" class="ph-empty">
+    Chưa có project. <a routerLink="/projects" (click)="dropdownOpen=false">Tạo ngay</a>
+  </div>
+
+  <ng-container *ngFor="let p of projects">
+    <!-- Project row -->
+    <div class="ph-project-row" (click)="$event.stopPropagation()">
+      <input type="checkbox"
+             class="ph-check"
+             [checked]="checked[p.id]"
+             (change)="toggleProject(p.id)" />
+      <span class="ph-item-name">{{ p.name }}</span>
+      <span *ngIf="p.lastScannedAt" class="ph-scanned">scanned</span>
+      <span *ngIf="moduleCountLabel(p.id)" class="ph-mod-count">{{ moduleCountLabel(p.id) }}</span>
+      <!-- Expand toggle -->
+      <button class="ph-expand-btn"
+              (click)="toggleExpand(p.id)"
+              [title]="expanded[p.id] ? 'Thu gọn modules' : 'Chọn modules'">
+        <svg [class.rotated]="expanded[p.id]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modules sub-list -->
+    <div *ngIf="expanded[p.id]" class="ph-modules">
+      <div *ngIf="loadingModules[p.id]" class="ph-mod-loading">Đang tải...</div>
+
+      <ng-container *ngIf="!loadingModules[p.id] && (moduleMap[p.id]?.length ?? 0) > 0">
+        <!-- Select all row -->
+        <label class="ph-mod-row ph-mod-all" (click)="$event.stopPropagation()">
+          <input type="checkbox"
+                 class="ph-check"
+                 [checked]="allModulesChecked(p.id)"
+                 [indeterminate]="someModulesChecked(p.id) && !allModulesChecked(p.id)"
+                 (change)="toggleAllModules(p.id)" />
+          <span class="ph-mod-name all">Tất cả modules</span>
+        </label>
+
+        <!-- Individual modules -->
+        <label *ngFor="let m of moduleMap[p.id]"
+               class="ph-mod-row"
+               (click)="$event.stopPropagation()">
+          <input type="checkbox"
+                 class="ph-check"
+                 [checked]="isModuleChecked(p.id, m.name)"
+                 (change)="toggleModule(p.id, m.name)" />
+          <span class="ph-mod-name">{{ m.name }}</span>
+          <span *ngIf="m.description" class="ph-mod-desc" [title]="m.description">
+            {{ m.description | slice:0:40 }}{{ m.description.length > 40 ? '…' : '' }}
+          </span>
+        </label>
+      </ng-container>
+
+      <div *ngIf="!loadingModules[p.id] && (!moduleMap[p.id] || moduleMap[p.id].length === 0)"
+           class="ph-mod-loading">
+        Chưa có module. <a routerLink="/projects" (click)="dropdownOpen=false">Thêm tại Cài đặt</a>
+      </div>
+    </div>
+  </ng-container>
+
+  <div class="ph-footer">
+    <a routerLink="/projects" (click)="dropdownOpen=false">Quản lý projects →</a>
+  </div>
+</div>

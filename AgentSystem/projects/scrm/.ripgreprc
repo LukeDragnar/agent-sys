@@ -1,0 +1,18 @@
+# Ripgrep config for SCRM project
+# WORKING_BE: D:\PROJECT\Git\_SourceForBuild\scrm_build
+# WORKING_FE: D:\PROJECT\Git\_SourceForBuild\build_scrm_frontend
+
+--smart-case
+--context=2
+--color=always
+--max-count=100
+
+# SCRM-specific excludes
+--glob=!node_modules
+--glob=!.git
+--glob=!dist
+--glob=!build
+--glob=!bin
+--glob=!obj
+--glob=!*.min.js
+--glob=!packages

@@ -1,0 +1,36 @@
+<div class="login-bg">
+  <div class="login-card">
+    <div class="logo">🤖</div>
+    <h1>BA Agent System</h1>
+    <p class="subtitle">Đăng nhập để tiếp tục</p>
+
+    <div class="form-group">
+      <label>Tên đăng nhập</label>
+      <input
+        type="text"
+        [(ngModel)]="username"
+        placeholder="username"
+        (keydown)="onEnter($event)"
+        [disabled]="loading"
+        autofocus
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Mật khẩu</label>
+      <input
+        type="password"
+        [(ngModel)]="password"
+        placeholder="••••••••"
+        (keydown)="onEnter($event)"
+        [disabled]="loading"
+      />
+    </div>
+
+    <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+    <button class="btn-login" (click)="submit()" [disabled]="loading || !username || !password">
+      {{ loading ? 'Đang đăng nhập…' : 'Đăng nhập' }}
+    </button>
+  </div>
+</div>

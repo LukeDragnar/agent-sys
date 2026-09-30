@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Projects>
+  <Project>
+    <Name>EcommerceConnect.API</Name>
+    <Portainer>
+      <Stack>EcommerceConnect</Stack>
+      <Url>http://10.0.161.16:9000/#!/2/docker/stacks/staging_ecommerce_connect_api?id=35&amp;type=1&amp;regular=true&amp;external=false&amp;orphaned=false</Url>
+    </Portainer>
+  </Project>
+  <Project>
+    <Name>EcommerceReceive.API</Name>
+    <Portainer>
+      <Stack>EcommerceReceive</Stack>
+      <Url>http://10.0.161.16:9000/#!/2/docker/stacks/staging-ecommerce-receive?id=42&amp;type=1&amp;regular=true&amp;external=false&amp;orphaned=false</Url>
+    </Portainer>
+  </Project>
+</Projects>

@@ -1,0 +1,343 @@
+<div class="specs-root">
+
+  <!-- ── Tab header ──────────────────────────────────────────── -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab === 'generated'" (click)="activeTab = 'generated'">
+      Generated Specs
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'docs'" (click)="activeTab = 'docs'">
+      Feature Docs
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       TAB: GENERATED
+  ══════════════════════════════════════════════════════════ -->
+  <div class="specs-layout" *ngIf="activeTab === 'generated'">
+
+    <!-- Left sidebar -->
+    <aside class="spec-list">
+      <div *ngIf="specsLoading" class="empty">Đang tải...</div>
+      <div *ngIf="!specsLoading && !allSpecs.length" class="empty">Chưa có spec nào.</div>
+
+      <div *ngFor="let group of projectGroups" class="project-group">
+        <div class="project-label">{{ group.key }}</div>
+
+        <!-- Spec module row -->
+        <div *ngFor="let spec of group.specs">
+          <div
+            class="spec-module-row"
+            [class.active]="selectedSpec?.id === spec.id"
+            (click)="toggleSpecGroup(spec)"
+          >
+            <span class="chevron">{{ expandedSpecs.has(spec.id) ? '▾' : '▸' }}</span>
+            <span class="module-name">{{ spec.name }}</span>
+            <span class="task-count">{{ spec.tasks.length }}</span>
+            <button class="btn-icon danger" (click)="deleteSpec(spec, $event)" title="Xóa module">✕</button>
+          </div>
+
+          <!-- Task list -->
+          <div *ngIf="expandedSpecs.has(spec.id)" class="task-list">
+            <div
+              *ngFor="let task of spec.tasks"
+              class="task-row"
+              [class.active]="selectedTask?.id === task.id"
+              (click)="selectedSpec = spec; selectTask(task)"
+            >
+              <span class="task-name">{{ task.name }}</span>
+              <span class="version-count">v{{ task.versions.length ? task.versions[0].version : 0 }}</span>
+              <button class="btn-icon danger" (click)="deleteTask(task, $event)" title="Xóa task">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right panel -->
+    <main class="spec-detail" *ngIf="selectedTask; else noGenSelection">
+
+      <!-- Detail header -->
+      <div class="detail-header">
+        <div class="detail-title-row">
+          <h1>{{ selectedSpec?.name }} / {{ selectedTask.name }}</h1>
+          <button class="btn-copy-url" (click)="copySpecUrl()" title="Copy shareable URL">🔗 Copy URL</button>
+        </div>
+        <div class="detail-meta-row">
+          <span class="badge">{{ selectedSpec?.projectKey }}/{{ selectedSpec?.slug }}/{{ selectedTask.slug }}</span>
+          <span class="meta">Session: <a class="session-link" (click)="goToSession(selectedSpec!.session!.id)">{{ selectedSpec?.session?.title }}</a></span>
+        </div>
+
+        <!-- View mode + actions toolbar -->
+        <div class="toolbar">
+          <div class="view-modes">
+            <button [class.active]="specViewMode === 'structured'" (click)="specViewMode = 'structured'">Structured</button>
+            <button [class.active]="specViewMode === 'json'" (click)="specViewMode = 'json'">JSON</button>
+            <button [class.active]="specViewMode === 'code'" (click)="specViewMode = 'code'; selectedGenFile = versionFiles.length ? versionFiles[0] : null">Code</button>
+          </div>
+          <div class="action-btns">
+            <button class="btn-qa" [disabled]="qaSpecLoading" (click)="runQaSpec(selectedVersion!)">
+              {{ qaSpecLoading ? 'QA đang chạy...' : '🔍 QA Spec' }}
+            </button>
+            <button class="btn-run" (click)="runWithOrchestrator()">▶ Run Orchestrator</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Version history -->
+      <div class="version-bar" *ngIf="selectedTask.versions.length > 1">
+        <span class="version-label">Versions:</span>
+        <ng-container *ngFor="let v of selectedTask.versions">
+          <button
+            class="version-btn"
+            [class.active]="selectedVersion?.id === v.id"
+            [class.diff-compare]="compareVersion?.id === v.id"
+            (click)="selectVersion(v)"
+          >
+            v{{ v.version }}
+          </button>
+          <button
+            *ngIf="selectedVersion?.id !== v.id"
+            class="btn-diff"
+            [class.active]="compareVersion?.id === v.id"
+            (click)="toggleDiff(v)"
+            title="So sánh với version này"
+          >diff</button>
+          <button class="btn-icon danger sm" (click)="deleteVersion(v, $event)" title="Xóa version">✕</button>
+        </ng-container>
+      </div>
+
+      <!-- DIFF view -->
+      <div class="diff-panel" *ngIf="showDiff && diffLines.length">
+        <div class="diff-header">
+          <span>So sánh v{{ compareVersion?.version }} → v{{ selectedVersion?.version }}</span>
+          <button (click)="showDiff = false; compareVersion = null">✕ Đóng</button>
+        </div>
+        <div class="diff-body">
+          <div
+            *ngFor="let line of diffLines"
+            class="diff-line"
+            [class.added]="line.status === 'added'"
+            [class.removed]="line.status === 'removed'"
+            [class.changed]="line.status === 'changed'"
+          >
+            <span class="diff-key">{{ line.key }}</span>
+            <span class="diff-old" *ngIf="line.oldVal !== undefined">{{ line.oldVal }}</span>
+            <span class="diff-arrow" *ngIf="line.status === 'changed'">→</span>
+            <span class="diff-new" *ngIf="line.newVal !== undefined">{{ line.newVal }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STRUCTURED VIEW -->
+      <div class="spec-body" *ngIf="specViewMode === 'structured' && parsedSpec">
+        <div class="struct-section">
+          <div class="struct-label">Mô tả</div>
+          <div class="struct-value">{{ parsedSpec.description }}</div>
+        </div>
+
+        <div class="struct-section" *ngIf="parsedSpec.actors?.length">
+          <div class="struct-label">Actors</div>
+          <div class="tag-list">
+            <span class="tag" *ngFor="let a of parsedSpec.actors">{{ a }}</span>
+          </div>
+        </div>
+
+        <div class="struct-section" *ngIf="parsedSpec.business_flow?.length">
+          <div class="struct-label">Business Flow</div>
+          <ol class="flow-list">
+            <li *ngFor="let step of parsedSpec.business_flow">{{ step }}</li>
+          </ol>
+        </div>
+
+        <div class="struct-section" *ngIf="parsedSpec.fields?.length">
+          <div class="struct-label">Fields</div>
+          <table class="fields-table">
+            <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let f of parsedSpec.fields">
+                <td>{{ f.name }}</td>
+                <td>{{ f.type }}</td>
+                <td>{{ f.required ? '✓' : '' }}</td>
+                <td>{{ f.note }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="struct-section" *ngIf="parsedSpec.actions?.length">
+          <div class="struct-label">Actions</div>
+          <div *ngFor="let action of parsedSpec.actions; let i = index" class="action-item">
+            <div class="action-header" (click)="toggleAction(i)">
+              <span class="chevron">{{ expandedActions.has(i) ? '▾' : '▸' }}</span>
+              <span class="action-name">{{ action.name }}</span>
+              <button class="btn-run-action" (click)="runWithOrchestrator(action.name); $event.stopPropagation()">▶</button>
+              <button class="btn-icon danger sm" (click)="deleteAction(i); $event.stopPropagation()" title="Xóa action">✕</button>
+            </div>
+            <div *ngIf="expandedActions.has(i)" class="action-body">
+              <div *ngIf="action.description" class="action-desc">{{ action.description }}</div>
+              <div *ngIf="action.steps?.length">
+                <div class="sub-label">Steps</div>
+                <ol class="flow-list"><li *ngFor="let s of action.steps">{{ s }}</li></ol>
+              </div>
+              <div *ngIf="action.validations?.length">
+                <div class="sub-label">Validations</div>
+                <ul class="val-list"><li *ngFor="let v of action.validations">{{ v }}</li></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="struct-section" *ngIf="parsedSpec.validations?.length">
+          <div class="struct-label">Validations</div>
+          <ul class="val-list">
+            <li *ngFor="let v of parsedSpec.validations">{{ v }}</li>
+          </ul>
+        </div>
+
+        <div class="struct-section" *ngIf="parsedSpec.non_functional">
+          <div class="struct-label">Non-functional</div>
+          <div class="struct-value">{{ parsedSpec.non_functional | json }}</div>
+        </div>
+      </div>
+
+      <!-- JSON VIEW -->
+      <div class="spec-body code-body" *ngIf="specViewMode === 'json'">
+        <pre class="json-pre">{{ formatSpec(selectedVersion) }}</pre>
+      </div>
+
+      <!-- CODE VIEW -->
+      <div class="spec-body code-layout" *ngIf="specViewMode === 'code'">
+        <div class="file-tabs" *ngIf="versionFiles.length">
+          <button
+            *ngFor="let f of versionFiles"
+            class="file-tab"
+            [class.active]="selectedGenFile?.filePath === f.filePath"
+            (click)="selectedGenFile = f"
+          >{{ f.filePath.split('/').pop() }}</button>
+        </div>
+        <div *ngIf="!versionFiles.length" class="empty">Chưa có file nào. Chạy Orchestrator để generate.</div>
+        <pre *ngIf="selectedGenFile" class="code-pre">{{ selectedGenFile.content }}</pre>
+      </div>
+
+      <!-- No version selected -->
+      <div class="spec-body" *ngIf="!selectedVersion">
+        <div class="empty">Không có version nào.</div>
+      </div>
+
+    </main>
+
+    <ng-template #noGenSelection>
+      <div class="no-selection">Chọn một task để xem spec</div>
+    </ng-template>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       TAB: DOCS
+  ══════════════════════════════════════════════════════════ -->
+  <div class="specs-layout" *ngIf="activeTab === 'docs'">
+
+    <!-- Left sidebar -->
+    <aside class="spec-list">
+      <div class="list-header">
+        <select [(ngModel)]="filterProject" (change)="applyDocFilter()" class="filter-select">
+          <option value="">Tất cả projects</option>
+          <option *ngFor="let p of docProjects" [value]="p">{{ p }}</option>
+        </select>
+      </div>
+
+      <div *ngIf="docsLoading" class="empty">Đang tải...</div>
+      <div *ngIf="!docsLoading && !filtered.length" class="empty">Chưa có doc nào.</div>
+
+      <div class="doc-list-scroll">
+        <div *ngFor="let group of groupDocsByProject(filtered)" class="project-group">
+          <div class="project-label">{{ group.key }}</div>
+          <div
+            *ngFor="let doc of group.items"
+            class="spec-item"
+            [class.active]="selectedDoc?.id === doc.id"
+            (click)="selectDoc(doc)"
+          >
+            <span class="spec-title">{{ doc.title }}</span>
+            <span class="spec-meta">{{ doc.updatedAt | date:'dd/MM/yy' }}</span>
+            <button class="btn-icon danger" (click)="deleteDoc(doc, $event)" title="Xóa">✕</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right panel -->
+    <main class="spec-detail" *ngIf="selectedDoc; else noDocSelection">
+      <div class="detail-header">
+        <div class="detail-title-row">
+          <h1>{{ selectedDoc.title }}</h1>
+        </div>
+        <div class="detail-meta-row">
+          <span class="badge">{{ selectedDoc.projectKey }}/{{ selectedDoc.slug }}</span>
+          <span class="meta">{{ selectedDoc.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </div>
+
+      <!-- Sessions liên quan -->
+      <div class="sessions-section">
+        <div class="sessions-header">
+          <span class="sessions-label">Sessions liên quan ({{ linkedSessions.length }})</span>
+          <button class="btn-link-session" (click)="showLinkPanel = !showLinkPanel">+ Thêm</button>
+        </div>
+
+        <div *ngIf="showLinkPanel" class="link-panel">
+          <input class="link-search" type="text" placeholder="Tìm session..." [(ngModel)]="linkSearch" />
+          <div class="link-results">
+            <div *ngIf="!filteredAllSessions.length" class="link-empty">Không có session nào.</div>
+            <div *ngFor="let s of filteredAllSessions" class="link-item" (click)="linkSession(s)">
+              <span class="link-item-title">{{ s.title }}</span>
+              <span class="link-item-date">{{ s.createdAt | date:'dd/MM/yy' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="linkedSessions.length === 0 && !showLinkPanel" class="sessions-empty">
+          Chưa có session nào được liên kết.
+        </div>
+        <div class="linked-list">
+          <div *ngFor="let s of linkedSessions" class="linked-item" (click)="goToSession(s.id)">
+            <span class="linked-title">{{ s.title }}</span>
+            <span class="linked-date">{{ s.createdAt | date:'dd/MM/yy' }}</span>
+            <button class="btn-icon danger sm" (click)="unlinkSession(s, $event)" title="Bỏ liên kết">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <pre class="markdown-content">{{ selectedDoc.content }}</pre>
+    </main>
+
+    <ng-template #noDocSelection>
+      <div class="no-selection">Chọn một doc để xem nội dung</div>
+    </ng-template>
+  </div>
+
+</div>
+
+<!-- QA Spec modal -->
+<div class="modal-overlay" *ngIf="qaSpecModal" (click)="qaSpecModal = null">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <span>QA Result — v{{ qaSpecModal.version.version }}</span>
+      <button (click)="qaSpecModal = null">✕</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="!qaSpecModal.result.hasIssues" class="qa-ok">✅ Spec trông ổn, không có vấn đề lớn.</div>
+      <div *ngIf="qaSpecModal.result.hasIssues">
+        <div class="qa-issues-label">Issues:</div>
+        <ul class="qa-issues">
+          <li *ngFor="let issue of qaSpecModal.result.issues">{{ issue }}</li>
+        </ul>
+      </div>
+      <div *ngIf="qaSpecModal.result.improvedSpec" class="qa-improved">
+        <div class="qa-improved-label">Improved spec available</div>
+        <button class="btn-apply" [disabled]="qaSpecApplying" (click)="applyImprovedSpec()">
+          {{ qaSpecApplying ? 'Đang lưu...' : '✓ Apply improved spec' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

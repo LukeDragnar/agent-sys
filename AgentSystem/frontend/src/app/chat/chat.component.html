@@ -1,0 +1,516 @@
+<div class="layout">
+
+  <!-- ── Top bar ── -->
+  <header class="topbar">
+    <span class="topbar-logo">🤖 BA Agent</span>
+    <div *ngIf="tokenWarning" class="token-warning">⚠️ {{ tokenWarning }}</div>
+    <div class="topbar-right">
+      <span class="topbar-user">{{ currentUser?.username }}</span>
+    </div>
+  </header>
+
+  <!-- ── Sidebar ── -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <button class="btn-new" (click)="newSession()">+ New Session</button>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="session-tabs">
+      <button [class.active]="sessionFilter==='all'" (click)="sessionFilter='all'">Tất cả</button>
+      <button [class.active]="sessionFilter==='favorite'" (click)="sessionFilter='favorite'">⭐</button>
+      <button [class.active]="sessionFilter==='archived'" (click)="sessionFilter='archived'">📦</button>
+    </div>
+
+    <div class="session-list">
+      <ng-container *ngFor="let s of filteredSessions">
+        <!-- Rename mode -->
+        <div *ngIf="renamingSession?.id === s.id"
+             class="session-item active rename-mode"
+             (click)="$event.stopPropagation()">
+          <input class="rename-input"
+                 [(ngModel)]="renamingSession!.title"
+                 (keydown.enter)="confirmRename()"
+                 (keydown.escape)="cancelRename()"
+                 (blur)="confirmRename()"
+                 autofocus />
+        </div>
+
+        <!-- Normal mode -->
+        <div *ngIf="renamingSession?.id !== s.id"
+             class="session-item"
+             [class.active]="s.id === activeSession?.id"
+             [class.is-favorite]="s.isFavorite"
+             [class.selected]="selectedIds.has(s.id)"
+             (click)="toggleSelect(s, $event); !$event.ctrlKey && !$event.metaKey && selectSession(s)"
+             (contextmenu)="onContextMenu($event, s)"
+             (dblclick)="startRename(s, $event)">
+          <div class="session-title">{{ s.title }}</div>
+          <div class="session-meta">
+            <span class="session-date">{{ s.createdAt | date:'dd/MM HH:mm' }}</span>
+            <button class="btn-star"
+                    [class.starred]="s.isFavorite"
+                    (click)="toggleFavorite(s, $event)"
+                    [title]="s.isFavorite ? 'Bỏ yêu thích' : 'Yêu thích'">
+              {{ s.isFavorite ? '⭐' : '☆' }}
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <div *ngIf="filteredSessions.length === 0" class="session-empty">
+        <ng-container *ngIf="sessionFilter==='all'">Chưa có session nào</ng-container>
+        <ng-container *ngIf="sessionFilter==='favorite'">Chưa có session yêu thích</ng-container>
+        <ng-container *ngIf="sessionFilter==='archived'">Không có session lưu trữ</ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Chat ── -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <span class="agent-badge">🤖 BA Agent</span>
+      <span *ngIf="activeSession" class="session-name">{{ activeSession.title }}</span>
+    </div>
+
+    <div class="message-list" #messageList>
+      <div *ngIf="messages.length === 0" class="empty-state">
+        Mô tả tính năng bạn cần xây dựng…
+      </div>
+
+      <div
+        *ngFor="let msg of messages"
+        class="message"
+        [class.user]="msg.role === 'user'"
+        [class.assistant]="msg.role === 'assistant'"
+      >
+        <!-- Screen list card rendering -->
+        <ng-container *ngIf="msg.role === 'assistant' && parseScreenList(msg.content) as sl; else plainBubble">
+          <div class="screen-list-card" (contextmenu)="onMsgContextMenu($event, msg.content)">
+            <div class="screen-list-title">📋 {{ sl.module }} — {{ sl.screens.length }} màn hình</div>
+            <div class="screen-grid">
+              <div *ngFor="let s of sl.screens" class="screen-item-card">
+                <div class="screen-item-name">{{ s.name }}</div>
+                <div class="screen-item-desc">{{ s.description }}</div>
+                <button class="btn-screen-detail" (click)="requestScreenDetail(s, sl.module)">
+                  Chi tiết →
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Plain message bubble -->
+        <ng-template #plainBubble>
+          <div class="bubble" (contextmenu)="onMsgContextMenu($event, msg.content)">
+            <pre class="content">{{ msg.content }}</pre>
+          </div>
+        </ng-template>
+      </div>
+
+      <div *ngIf="loading" class="message assistant">
+        <div class="bubble loading">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <textarea
+        [(ngModel)]="input"
+        (keydown)="onEnter($event)"
+        [placeholder]="isListening ? '🎙 Đang nghe…' : 'Nhập yêu cầu… (Enter gửi, Shift+Enter xuống dòng)'"
+        rows="3"
+        [disabled]="loading || !activeSession"
+        [class.listening]="isListening"
+      ></textarea>
+      <div class="input-actions">
+        <button class="btn-mic"
+                [class.active]="isListening"
+                [title]="isListening ? 'Dừng (Space)' : 'Nói (Space)'"
+                [disabled]="!activeSession || !voiceSupported"
+                (click)="toggleVoice()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect *ngIf="isListening" x="6" y="6" width="12" height="12" rx="2"/>
+            <ng-container *ngIf="!isListening">
+              <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </ng-container>
+          </svg>
+        </button>
+        <button class="btn-send" (click)="send()" [disabled]="loading || !input.trim() || !activeSession">
+          {{ loading ? '…' : 'Gửi' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Message context menu ── -->
+  <div
+    *ngIf="msgContextMenu"
+    class="context-menu"
+    [style.left.px]="msgContextMenu.x"
+    [style.top.px]="msgContextMenu.y"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="context-item" (click)="copyMessage(msgContextMenu.content)">
+      📋 Copy
+    </div>
+    <div class="context-item" (click)="quoteMessage(msgContextMenu.content)">
+      💬 Quote
+    </div>
+  </div>
+
+  <!-- ── Context menu ── -->
+  <div
+    *ngIf="contextMenu"
+    class="context-menu"
+    [style.left.px]="contextMenu.x"
+    [style.top.px]="contextMenu.y"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="context-item" (click)="startRename(contextMenu.session, $event)">
+      ✏️ Đổi tên
+    </div>
+    <div class="context-item" (click)="toggleFavorite(contextMenu.session, $event)">
+      {{ contextMenu.session.isFavorite ? '☆ Bỏ yêu thích' : '⭐ Yêu thích' }}
+    </div>
+    <div class="context-item" (click)="toggleArchive(contextMenu.session)">
+      {{ contextMenu.session.isArchived ? '📤 Bỏ lưu trữ' : '📦 Lưu trữ' }}
+    </div>
+    <div class="context-separator"></div>
+    <div class="context-item danger" (click)="requestDelete(contextMenu.session)">
+      🗑 Xóa {{ contextMenuSelectionCount > 1 ? contextMenuSelectionCount + ' sessions' : 'session này' }}
+    </div>
+  </div>
+
+  <!-- ── Spec context menu (task / action right-click) ── -->
+  <div
+    *ngIf="specContextMenu"
+    class="context-menu"
+    [style.left.px]="specContextMenu.x"
+    [style.top.px]="specContextMenu.y"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="context-item" (click)="runSpecFromContextMenu()">
+      ▶ Run {{ specContextMenu.type === 'action' ? specContextMenu.actionName : 'Task' }} via Orchestrator
+    </div>
+  </div>
+
+  <!-- ── Confirm delete dialog ── -->
+  <div *ngIf="confirmDeleteSessions.length > 0" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-title">Xóa session?</div>
+      <div class="modal-body" *ngIf="confirmDeleteSessions.length === 1">
+        Xóa <strong>{{ confirmDeleteSessions[0].title }}</strong>?<br>
+        Tất cả messages và specs sẽ bị xóa vĩnh viễn.
+      </div>
+      <div class="modal-body" *ngIf="confirmDeleteSessions.length > 1">
+        Xóa <strong>{{ confirmDeleteSessions.length }} sessions</strong>?<br>
+        Tất cả messages và specs sẽ bị xóa vĩnh viễn.
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="cancelDelete()">Hủy</button>
+        <button class="btn-danger" (click)="confirmDelete()">Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Spec panel ── -->
+  <div class="spec-panel" [class.collapsed]="!specPanelOpen">
+    <div class="spec-header">
+      <span *ngIf="specPanelOpen">📋 Spec</span>
+      <button
+        *ngIf="specPanelOpen && selectedVersion"
+        class="btn-qa-spec"
+        [disabled]="qaSpecLoading"
+        (click)="runQaSpec(selectedVersion)"
+        title="Kiểm tra chất lượng spec (QA Spec)"
+      >{{ qaSpecLoading ? '...' : '✦ QA' }}</button>
+      <button
+        *ngIf="specPanelOpen && selectedVersion"
+        class="btn-run-spec"
+        (click)="runSpecWithOrchestrator()"
+        title="Chạy spec này qua Orchestrator (DEV → QA)"
+      >▶ Run</button>
+      <button class="btn-toggle-spec" (click)="specPanelOpen = !specPanelOpen" [title]="specPanelOpen ? 'Thu gọn' : 'Mở rộng Spec'">
+        {{ specPanelOpen ? '›' : '‹' }}
+      </button>
+    </div>
+
+    <div *ngIf="specs.length === 0 && specPanelOpen" class="spec-empty">
+      Chưa có spec. Chat với BA Agent để generate…
+    </div>
+
+    <ng-container *ngIf="specs.length > 0 && specPanelOpen">
+
+      <!-- 3-level hierarchy tree -->
+      <div class="spec-tree">
+        <div *ngFor="let spec of specs" class="spec-module">
+
+          <!-- Module header -->
+          <div class="spec-module-header" (click)="toggleSpec(spec)">
+            <span class="spec-module-caret">{{ isSpecExpanded(spec) ? '▼' : '▶' }}</span>
+            <span class="spec-module-name">{{ spec.name }}</span>
+            <span class="spec-module-count">{{ spec.tasks.length }}</span>
+            <button
+              class="btn-del-spec"
+              (click)="deleteSpec(spec, $event)"
+              title="Xóa module này"
+            >✕</button>
+          </div>
+
+          <!-- Tasks -->
+          <ng-container *ngIf="isSpecExpanded(spec)">
+            <div *ngFor="let task of spec.tasks" class="spec-task">
+
+              <!-- Task header -->
+              <div
+                class="spec-task-header"
+                [class.active]="selectedTask?.id === task.id"
+                (click)="selectTask(task)"
+                (contextmenu)="onSpecTaskContextMenu($event)"
+              >
+                <span class="spec-task-icon">📄</span>
+                <span class="spec-task-name">{{ task.name }}</span>
+                <span class="spec-task-count">v{{ task.versions.length }}</span>
+                <button
+                  class="btn-del-task"
+                  (click)="deleteTask(task, spec, $event)"
+                  title="Xóa task này"
+                >✕</button>
+              </div>
+
+              <!-- Versions (shown when task is selected) -->
+              <ng-container *ngIf="selectedTask?.id === task.id">
+                <div
+                  *ngFor="let v of task.versions"
+                  class="version-item"
+                  [class.selected]="v.id === selectedVersion?.id"
+                  (click)="selectVersion(v, task, spec)"
+                >
+                  <span class="v-badge">v{{ v.version }}</span>
+                  <span class="v-date">{{ v.createdAt | date:'dd/MM HH:mm' }}</span>
+                  <button
+                    *ngIf="v.id !== selectedVersion?.id"
+                    class="btn-diff"
+                    [class.active]="v.id === compareVersion?.id"
+                    (click)="$event.stopPropagation(); toggleDiff(v)"
+                    title="So sánh với version đang xem"
+                  >diff</button>
+                  <button
+                    class="btn-del-version"
+                    (click)="deleteVersion(v, $event)"
+                    title="Xóa version này"
+                  >✕</button>
+                </div>
+              </ng-container>
+
+            </div>
+          </ng-container>
+
+        </div>
+      </div>
+
+      <!-- Spec detail / diff -->
+      <div class="spec-body">
+
+        <!-- Diff view -->
+        <ng-container *ngIf="showDiff && compareVersion">
+          <div class="diff-header">
+            <span class="diff-title">
+              So sánh v{{ compareVersion.version }} → v{{ selectedVersion?.version }}
+            </span>
+            <span *ngIf="!hasDiffChanges" class="diff-same">Không có thay đổi</span>
+            <button class="btn-close-diff" (click)="showDiff = false; compareVersion = null">✕</button>
+          </div>
+          <div class="diff-content">
+            <div
+              *ngFor="let line of diffLines"
+              class="diff-line"
+              [class.added]="line.status === 'added'"
+              [class.removed]="line.status === 'removed'"
+              [class.changed]="line.status === 'changed'"
+              [class.unchanged]="line.status === 'unchanged'"
+            >
+              <span class="diff-key">{{ line.key }}</span>
+              <span class="diff-vals">
+                <ng-container *ngIf="line.status === 'added'">
+                  <span class="val-new">+ {{ line.newVal }}</span>
+                </ng-container>
+                <ng-container *ngIf="line.status === 'removed'">
+                  <span class="val-old">− {{ line.oldVal }}</span>
+                </ng-container>
+                <ng-container *ngIf="line.status === 'changed'">
+                  <span class="val-old">{{ line.oldVal }}</span>
+                  <span class="arrow">→</span>
+                  <span class="val-new">{{ line.newVal }}</span>
+                </ng-container>
+                <ng-container *ngIf="line.status === 'unchanged'">
+                  <span class="val-same">{{ line.newVal }}</span>
+                </ng-container>
+              </span>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Normal spec view -->
+        <ng-container *ngIf="!showDiff && selectedVersion">
+
+          <!-- View toggle -->
+          <div class="spec-view-tabs">
+            <button [class.active]="specViewMode === 'structured'" (click)="specViewMode = 'structured'">Structured</button>
+            <button [class.active]="specViewMode === 'json'" (click)="specViewMode = 'json'">JSON</button>
+            <button [class.active]="specViewMode === 'code'" (click)="specViewMode = 'code'; selectedGenFile = versionFiles[0] || null" [class.has-files]="versionFiles.length > 0">
+              Code{{ versionFiles.length > 0 ? ' (' + versionFiles.length + ')' : '' }}
+            </button>
+          </div>
+
+          <!-- ── Structured view ── -->
+          <ng-container *ngIf="specViewMode === 'structured' && parsedSpec as spec">
+            <div class="structured-spec">
+
+              <!-- Feature header -->
+              <div class="feature-header">
+                <div class="feature-name">{{ spec.feature_name }}</div>
+                <div *ngIf="spec.description" class="feature-desc">{{ spec.description }}</div>
+                <div *ngIf="spec.actors && spec.actors.length" class="actor-row">
+                  <span *ngFor="let a of spec.actors" class="actor-tag">{{ a }}</span>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div *ngIf="spec.actions && spec.actions.length" class="spec-section">
+                <div class="spec-section-label">
+                  Actions
+                  <span class="count-badge">{{ spec.actions.length }}</span>
+                </div>
+                <div *ngFor="let action of spec.actions; let i = index" class="action-item">
+                  <div class="action-row" (click)="toggleAction(i)" (contextmenu)="onSpecActionContextMenu($event, action.name)">
+                    <span class="action-caret">{{ isActionExpanded(i) ? '▼' : '▶' }}</span>
+                    <span class="action-name">{{ action.name }}</span>
+                    <span *ngIf="action.actor" class="action-actor">{{ action.actor }}</span>
+                    <button class="btn-run-action" (click)="$event.stopPropagation(); runActionWithOrchestrator(action.name)" title="Run action này qua Orchestrator">▶</button>
+                    <button class="btn-del-action" (click)="$event.stopPropagation(); deleteAction(i)" title="Xóa action này">✕</button>
+                  </div>
+                  <div *ngIf="isActionExpanded(i)" class="action-detail">
+                    <div *ngIf="action.description" class="action-desc">{{ action.description }}</div>
+                    <div *ngIf="action.input && (action.input | keyvalue).length" class="pre-post-block">
+                      <span class="pre-post-label">Input:</span>
+                      <ul><li *ngFor="let kv of action.input | keyvalue"><b>{{ kv.key }}</b>: {{ kv.value }}</li></ul>
+                    </div>
+                    <div *ngIf="action.output && (action.output | keyvalue).length" class="pre-post-block">
+                      <span class="pre-post-label">Output:</span>
+                      <ul><li *ngFor="let kv of action.output | keyvalue"><b>{{ kv.key }}</b>: {{ kv.value }}</li></ul>
+                    </div>
+                    <div *ngIf="action.preconditions && action.preconditions.length" class="pre-post-block">
+                      <span class="pre-post-label">Pre:</span>
+                      <ul><li *ngFor="let p of action.preconditions">{{ p }}</li></ul>
+                    </div>
+                    <div *ngIf="action.postconditions && action.postconditions.length" class="pre-post-block">
+                      <span class="pre-post-label">Post:</span>
+                      <ul><li *ngFor="let p of action.postconditions">{{ p }}</li></ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fields -->
+              <div *ngIf="spec.fields && spec.fields.length" class="spec-section">
+                <div class="spec-section-label">
+                  Fields
+                  <span class="count-badge">{{ spec.fields.length }}</span>
+                </div>
+                <div *ngFor="let f of spec.fields" class="field-item">
+                  <span class="field-name">{{ f.name }}</span>
+                  <span class="field-type">{{ f.type }}</span>
+                  <span *ngIf="f.required" class="field-required">required</span>
+                  <span *ngIf="f.validation" class="field-validation">{{ f.validation }}</span>
+                </div>
+              </div>
+
+              <!-- Business flow -->
+              <div *ngIf="spec.business_flow && spec.business_flow.length" class="spec-section">
+                <div class="spec-section-label">Business Flow</div>
+                <ol class="flow-list">
+                  <li *ngFor="let step of spec.business_flow">{{ step }}</li>
+                </ol>
+              </div>
+
+            </div>
+          </ng-container>
+
+          <!-- ── JSON view ── -->
+          <pre *ngIf="specViewMode === 'json'" class="spec-json"><code>{{ formatSpec(selectedVersion) }}</code></pre>
+
+          <!-- ── Code view ── -->
+          <ng-container *ngIf="specViewMode === 'code'">
+            <div *ngIf="versionFiles.length === 0" class="code-empty">
+              Chưa có code. Run spec qua Orchestrator để sinh code.
+            </div>
+            <div *ngIf="versionFiles.length > 0" class="code-panel">
+              <div class="code-file-list">
+                <div
+                  *ngFor="let f of versionFiles"
+                  class="code-file-item"
+                  [class.active]="f.filePath === selectedGenFile?.filePath"
+                  (click)="selectGenFile(f)"
+                  [title]="f.filePath"
+                >
+                  <span class="code-file-icon">{{ f.filePath.endsWith('.cs') ? '⬡' : f.filePath.endsWith('.sql') ? '🗄' : '△' }}</span>
+                  <span class="code-file-name">{{ f.filePath.split('/').pop() }}</span>
+                </div>
+              </div>
+              <div class="code-file-viewer">
+                <div *ngIf="selectedGenFile" class="code-file-path">{{ selectedGenFile.filePath }}</div>
+                <pre *ngIf="selectedGenFile" class="spec-json code-content"><code>{{ selectedGenFile.content }}</code></pre>
+              </div>
+            </div>
+          </ng-container>
+
+        </ng-container>
+
+      </div>
+    </ng-container>
+  </div>
+
+</div>
+
+<!-- ── QA Spec Modal ── -->
+<div *ngIf="qaSpecModal" class="qa-modal-backdrop" (click)="qaSpecModal = null">
+  <div class="qa-modal" (click)="$event.stopPropagation()">
+
+    <div class="qa-modal-header">
+      <span class="qa-modal-title">Kết quả QA Spec — v{{ qaSpecModal.version.version }}</span>
+      <button class="qa-close" (click)="qaSpecModal = null">✕</button>
+    </div>
+
+    <!-- No issues -->
+    <div *ngIf="!qaSpecModal.result.hasIssues" class="qa-ok">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+      Spec đầy đủ, không phát hiện vấn đề.
+    </div>
+
+    <!-- Issues found -->
+    <ng-container *ngIf="qaSpecModal.result.hasIssues">
+      <div class="qa-section-label">Vấn đề phát hiện ({{ qaSpecModal.result.issues.length }})</div>
+      <ul class="qa-issues">
+        <li *ngFor="let issue of qaSpecModal.result.issues">{{ issue }}</li>
+      </ul>
+
+      <ng-container *ngIf="qaSpecModal.result.improvedSpec">
+        <div class="qa-section-label">Spec đề xuất sau khi fix</div>
+        <pre class="qa-spec-preview">{{ qaSpecModal.result.improvedSpec | json }}</pre>
+
+        <div class="qa-actions">
+          <button class="qa-btn-apply" [disabled]="qaSpecApplying" (click)="applyImprovedSpec()">
+            {{ qaSpecApplying ? 'Đang áp dụng...' : 'Áp dụng spec mới' }}
+          </button>
+          <button class="qa-btn-cancel" (click)="qaSpecModal = null">Bỏ qua</button>
+        </div>
+      </ng-container>
+    </ng-container>
+
+  </div>
+</div>

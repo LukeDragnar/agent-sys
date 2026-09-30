@@ -1,0 +1,119 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Project\\Tool\\FastDeploy\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|d:\\project\\tool\\fastdeploy\\fastdeploy\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|solutionrelative:fastdeploy\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|D:\\Project\\Tool\\FastDeploy\\fastdeploy\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|solutionrelative:fastdeploy\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|d:\\project\\tool\\fastdeploy\\fastdeploy\\services\\projectscannerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|solutionrelative:fastdeploy\\services\\projectscannerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|d:\\project\\tool\\fastdeploy\\fastdeploy\\models\\portainerinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|solutionrelative:fastdeploy\\models\\portainerinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|d:\\project\\tool\\fastdeploy\\fastdeploy\\common\\functioncommon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|solutionrelative:fastdeploy\\common\\functioncommon.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|d:\\project\\tool\\fastdeploy\\fastdeploy\\models\\projectinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CC543639-4692-47C8-A090-D9BD20A4B994}|FastDeploy\\FastDeploy.csproj|solutionrelative:fastdeploy\\models\\projectinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Form1.cs [Design]",
+              "DocumentMoniker": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Form1.cs",
+              "RelativeDocumentMoniker": "FastDeploy\\Form1.cs",
+              "ToolTip": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Form1.cs [Design]",
+              "RelativeToolTip": "FastDeploy\\Form1.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-03T09:46:55.607Z",
+              "IsPinned": true,
+              "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Form1.cs",
+              "DocumentMoniker": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Form1.cs",
+              "RelativeDocumentMoniker": "FastDeploy\\Form1.cs",
+              "ToolTip": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Form1.cs",
+              "RelativeToolTip": "FastDeploy\\Form1.cs",
+              "ViewState": "AgIAAK8AAAAAAAAAAAAiwL0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-30T01:48:09.344Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ProjectScannerService.cs",
+              "DocumentMoniker": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Services\\ProjectScannerService.cs",
+              "RelativeDocumentMoniker": "FastDeploy\\Services\\ProjectScannerService.cs",
+              "ToolTip": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Services\\ProjectScannerService.cs",
+              "RelativeToolTip": "FastDeploy\\Services\\ProjectScannerService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T02:45:51.352Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PortainerInfo.cs",
+              "DocumentMoniker": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Models\\PortainerInfo.cs",
+              "RelativeDocumentMoniker": "FastDeploy\\Models\\PortainerInfo.cs",
+              "ToolTip": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Models\\PortainerInfo.cs",
+              "RelativeToolTip": "FastDeploy\\Models\\PortainerInfo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T10:55:41.253Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "FunctionCommon.cs",
+              "DocumentMoniker": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Common\\FunctionCommon.cs",
+              "RelativeDocumentMoniker": "FastDeploy\\Common\\FunctionCommon.cs",
+              "ToolTip": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Common\\FunctionCommon.cs",
+              "RelativeToolTip": "FastDeploy\\Common\\FunctionCommon.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwBAAAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-04T08:52:21.49Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ProjectInfo.cs",
+              "DocumentMoniker": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Models\\ProjectInfo.cs",
+              "RelativeDocumentMoniker": "FastDeploy\\Models\\ProjectInfo.cs",
+              "ToolTip": "D:\\Project\\Tool\\FastDeploy\\FastDeploy\\Models\\ProjectInfo.cs",
+              "RelativeToolTip": "FastDeploy\\Models\\ProjectInfo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-05T07:44:17.512Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

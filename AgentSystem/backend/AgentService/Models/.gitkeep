@@ -1,0 +1,10 @@
+!.gitkeep
+# Folder chứa ONNX embedding model (paraphrase-multilingual-MiniLM-L12-v2)
+#
+# File bị .gitignore (xem .gitignore tại root). Tải bằng:
+#   bash scripts/download-embedding-model.sh
+#
+# Sau khi tải xong, folder này sẽ có:
+#   - model.onnx       (~120MB, quantized)
+#   - vocab.txt        (~800KB, BERT vocab)
+#   - tokenizer.json   (optional)

@@ -1,0 +1,302 @@
+<div class="admin-layout">
+
+  <!-- ── Header ── -->
+  <header class="admin-header">
+    <div class="header-left">
+      <span class="logo">⚙️ Admin Panel</span>
+    </div>
+    <nav class="tab-nav">
+      <button [class.active]="activeTab === 'users'"   (click)="activeTab = 'users'">👥 Users</button>
+      <button [class.active]="activeTab === 'usage'"   (click)="activeTab = 'usage'; loadUsage()">📊 Usage</button>
+      <button [class.active]="activeTab === 'reports'" (click)="activeTab = 'reports'">📈 Reports</button>
+      <button [class.active]="activeTab === 'sessions'" (click)="activeTab = 'sessions'; loadSessions()">💬 Sessions</button>
+    </nav>
+    <div class="header-right">
+      <span class="user-badge">{{ currentUser?.username }}</span>
+      <button class="btn-ghost" (click)="goToChat()">← Chat</button>
+      <button class="btn-ghost" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════
+       TAB: USERS
+  ══════════════════════════════════════════ -->
+  <main *ngIf="activeTab === 'users'" class="tab-content">
+
+    <div class="section-header">
+      <h2>Quản lý Users</h2>
+      <button class="btn-primary" (click)="openCreateForm()">+ Thêm user</button>
+    </div>
+
+    <!-- Create / Edit form -->
+    <div *ngIf="showUserForm" class="form-card">
+      <h3>{{ editingUser ? 'Sửa user: ' + editingUser.username : 'Tạo user mới' }}</h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Username</label>
+          <input [(ngModel)]="userForm.username" [disabled]="!!editingUser" placeholder="username" />
+        </div>
+        <div class="form-group">
+          <label>{{ editingUser ? 'Mật khẩu mới (để trống = giữ nguyên)' : 'Mật khẩu' }}</label>
+          <input type="password" [(ngModel)]="userForm.password" placeholder="••••••••" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role</label>
+          <select [(ngModel)]="userForm.role">
+            <option value="user">user</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Giới hạn token/tuần (0 = không giới hạn)</label>
+          <input type="number" [(ngModel)]="userForm.weeklyTokenLimit" min="0" step="10000" />
+        </div>
+        <div class="form-group" *ngIf="editingUser">
+          <label>Trạng thái</label>
+          <select [(ngModel)]="userForm.isActive">
+            <option [ngValue]="true">Active</option>
+            <option [ngValue]="false">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="userFormError" class="form-error">{{ userFormError }}</div>
+
+      <div class="form-actions">
+        <button class="btn-primary" (click)="saveUser()">Lưu</button>
+        <button class="btn-ghost" (click)="showUserForm = false">Hủy</button>
+      </div>
+    </div>
+
+    <!-- Users table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Giới hạn / tuần</th>
+            <th>Trạng thái</th>
+            <th>Tạo lúc</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of users" [class.inactive]="!u.isActive">
+            <td><strong>{{ u.username }}</strong></td>
+            <td><span class="badge" [class.admin]="u.role === 'admin'">{{ u.role }}</span></td>
+            <td>{{ u.weeklyTokenLimit === 0 ? '∞ Không giới hạn' : (u.weeklyTokenLimit | number) }}</td>
+            <td>
+              <span class="status" [class.active]="u.isActive">
+                {{ u.isActive ? '● Active' : '○ Inactive' }}
+              </span>
+            </td>
+            <td>{{ u.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td class="actions">
+              <button class="btn-sm" (click)="openEditForm(u)">Sửa</button>
+              <button class="btn-sm warn" (click)="toggleActive(u)">
+                {{ u.isActive ? 'Khóa' : 'Mở' }}
+              </button>
+              <button class="btn-sm danger" (click)="deleteUser(u)">Xóa</button>
+              <button class="btn-sm" (click)="usageFilterUserId = u.id; activeTab = 'usage'; loadUsage()">
+                Usage
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="users.length === 0">
+            <td colspan="6" class="empty">Chưa có user nào.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       TAB: USAGE
+  ══════════════════════════════════════════ -->
+  <main *ngIf="activeTab === 'usage'" class="tab-content">
+
+    <div class="section-header">
+      <h2>Lịch sử lưu lượng</h2>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="form-group">
+        <label>User</label>
+        <select [(ngModel)]="usageFilterUserId">
+          <option value="">-- Chọn user --</option>
+          <option *ngFor="let u of users" [value]="u.id">{{ u.username }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Từ ngày</label>
+        <input type="date" [(ngModel)]="usageFilterFrom" />
+      </div>
+      <div class="form-group">
+        <label>Đến ngày</label>
+        <input type="date" [(ngModel)]="usageFilterTo" />
+      </div>
+      <button class="btn-primary" (click)="loadUsage()" [disabled]="!usageFilterUserId">Lọc</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Tuần</th>
+            <th>Input Tokens</th>
+            <th>Output Tokens</th>
+            <th>Tổng</th>
+            <th>Session</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of usageLogs">
+            <td>{{ log.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td>W{{ log.isoWeek }}/{{ log.isoYear }}</td>
+            <td class="num">{{ log.inputTokens | number }}</td>
+            <td class="num">{{ log.outputTokens | number }}</td>
+            <td class="num total">{{ (log.inputTokens + log.outputTokens) | number }}</td>
+            <td class="small">{{ log.sessionId | slice:0:8 }}…</td>
+          </tr>
+          <tr *ngIf="usageLogs.length === 0">
+            <td colspan="6" class="empty">
+              {{ usageFilterUserId ? 'Không có dữ liệu.' : 'Chọn user để xem.' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       TAB: REPORTS
+  ══════════════════════════════════════════ -->
+  <main *ngIf="activeTab === 'reports'" class="tab-content">
+
+    <div class="section-header">
+      <h2>Báo cáo Top Users</h2>
+      <div class="week-nav">
+        <button class="btn-ghost" (click)="prevWeek()">‹ Tuần trước</button>
+        <span class="week-label">{{ reportWeekLabel }}</span>
+        <button class="btn-ghost" (click)="nextWeek()">Tuần sau ›</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Username</th>
+            <th>Input</th>
+            <th>Output</th>
+            <th>Tổng tokens</th>
+            <th>Giới hạn</th>
+            <th>Sử dụng %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of reportData; let i = index" [class.over-limit]="r.usagePercent >= 100">
+            <td class="rank">{{ i + 1 }}</td>
+            <td><strong>{{ r.username }}</strong></td>
+            <td class="num">{{ formatTokens(r.totalInputTokens) }}</td>
+            <td class="num">{{ formatTokens(r.totalOutputTokens) }}</td>
+            <td class="num total">{{ formatTokens(r.totalTokens) }}</td>
+            <td class="num">{{ r.weeklyLimit === 0 ? '∞' : formatTokens(r.weeklyLimit) }}</td>
+            <td class="num">
+              <div class="usage-bar-wrap">
+                <div class="usage-bar" [style.width.%]="r.weeklyLimit === 0 ? 5 : Math.min(r.usagePercent, 100)"
+                  [class.warning]="r.usagePercent >= 80" [class.danger]="r.usagePercent >= 100"></div>
+                <span>{{ r.weeklyLimit === 0 ? '—' : r.usagePercent + '%' }}</span>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="reportData.length === 0">
+            <td colspan="7" class="empty">Không có dữ liệu tuần này.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       TAB: SESSIONS
+  ══════════════════════════════════════════ -->
+  <main *ngIf="activeTab === 'sessions'" class="tab-content">
+
+    <div class="section-header">
+      <h2>Sessions</h2>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <select [(ngModel)]="sessionFilterUserId">
+        <option value="">Tất cả users</option>
+        <option *ngFor="let u of users" [value]="u.id">{{ u.username }}</option>
+      </select>
+      <input type="date" [(ngModel)]="sessionFilterFrom">
+      <input type="date" [(ngModel)]="sessionFilterTo">
+      <button class="btn-primary" (click)="loadSessions()">Lọc</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Ngày tạo</th>
+            <th>User</th>
+            <th>Session</th>
+            <th>Agent</th>
+            <th>Claude Model</th>
+            <th>Specs</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let s of sessions">
+            <tr [class.archived]="s.isArchived">
+              <td>{{ s.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td><span class="badge-user">{{ s.username }}</span></td>
+              <td>
+                <span *ngIf="s.isFavorite" title="Favorite">⭐</span>
+                {{ s.title }}
+              </td>
+              <td><span class="badge-agent">{{ s.agentType }}</span></td>
+              <td><span class="badge-model" *ngIf="s.claudeModel">{{ s.claudeModel }}</span></td>
+              <td>
+                <span class="badge-spec" *ngIf="s.specCount > 0">{{ s.specCount }} spec</span>
+                <span class="text-muted" *ngIf="s.specCount === 0">—</span>
+              </td>
+              <td>
+                <button class="btn-ghost btn-sm" *ngIf="s.specCount > 0" (click)="toggleSession(s.id)">
+                  {{ expandedSessionId === s.id ? '▲' : '▼' }} Specs
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="expandedSessionId === s.id" class="spec-detail-row">
+              <td colspan="7">
+                <div class="spec-list">
+                  <div *ngFor="let sp of s.specs" class="spec-item">
+                    <strong>{{ sp.name }}</strong>
+                    <span class="text-muted"> — {{ sp.taskCount }} task</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+          <tr *ngIf="sessions.length === 0">
+            <td colspan="7" class="empty">Không có session nào.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+</div>

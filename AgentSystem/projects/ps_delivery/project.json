@@ -1,0 +1,32 @@
+{
+  "name": "PS_Delivery",
+  "description": "Hệ thống nhận và xử lý trạng thái vận chuyển từ các đơn vị vận chuyển (GHN, GHTK, VTP, JnT, Ahamove, Best, BoxMe, EMS, DHCL, HolaShip, NJV, Ship60, SuperShip, VnPost) rồi forward về CRM",
+
+  "paths": "-> Hoi user khi bat dau task. Keys: root, webhook_service, delivery_receive",
+
+  "services": [
+    {
+      "name": "PsWebhook",
+      "folder": "Service/PsWebhook.API",
+      "framework": ".NET Core 2.1 ASP.NET Core Web API",
+      "role": "Nhận webhook callback từ đối tác vận chuyển, lưu vào DB, gửi message vào RabbitMQ",
+      "database": "SQL Server — PSGH_Webhook",
+      "dependencies": ["PsWebhook.DataContext", "PsCommon", "EFCore.SqlServer.WithNoLock"]
+    },
+    {
+      "name": "DeliveryReceive",
+      "folder": "ps_delivery_receive/DeliveryReceive.API",
+      "framework": ".NET 6 ASP.NET Core Web API",
+      "role": "Consume message từ RabbitMQ, xử lý & chuẩn hóa data, forward trạng thái về CRM",
+      "messageBroker": "RabbitMQ via MassTransit 8.1",
+      "scheduler": "Quartz.NET 3.6",
+      "dependencies": ["DeliveryReceive.Service", "DeliveryReceive.DataContext"]
+    }
+  ],
+
+  "shippingPartners": [
+    "GHN", "GHTK", "VTP", "JnT", "Ahamove", "Best",
+    "BoxMe", "EMS", "DHCL", "HolaShip", "NJV",
+    "Ship60", "SuperShip", "VnPost"
+  ]
+}

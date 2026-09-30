@@ -1,0 +1,178 @@
+<div class="orch-layout">
+
+  <!-- ── Header ── -->
+  <div class="orch-header">
+    <span class="orch-title">⚙️ Sinh Code</span>
+    <span class="pipeline-steps">BA → DEV → QA → PATCH</span>
+    <div class="header-actions">
+      <button class="btn-settings" (click)="showProjectPanel = !showProjectPanel" [class.active]="showProjectPanel">
+        ⚙ Project Settings
+      </button>
+      <span *ngIf="projectContext" class="ctx-badge" title="Project conventions loaded">✓ Conventions</span>
+    </div>
+  </div>
+
+
+  <!-- ── Project Settings Panel ── -->
+  <div *ngIf="showProjectPanel" class="project-panel">
+    <div class="panel-row">
+      <label>Project (dùng conventions & output path của project)</label>
+      <select class="path-input" [(ngModel)]="selectedProjectId" (ngModelChange)="selectProject($event)">
+        <option value="">-- Không chọn project --</option>
+        <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+      </select>
+    </div>
+    <div class="panel-row">
+      <label>Output Directory</label>
+      <input [(ngModel)]="outputDir" (blur)="saveOutputDir()" placeholder="Để trống → dùng config của project hoặc temp dir" class="path-input" />
+    </div>
+    <div class="panel-row">
+      <label>Backend path (scan thủ công)</label>
+      <input [(ngModel)]="beScanPath" placeholder="D:\PROJECT\MyApp\backend" class="path-input" />
+    </div>
+    <div class="panel-row">
+      <label>Frontend path (scan thủ công)</label>
+      <input [(ngModel)]="feScanPath" placeholder="D:\PROJECT\MyApp\frontend\src" class="path-input" />
+    </div>
+    <div class="panel-row">
+      <button class="btn-scan" (click)="scanProject()" [disabled]="scanLoading || (!beScanPath && !feScanPath)">
+        <span *ngIf="!scanLoading">🔍 Quét code & học conventions</span>
+        <span *ngIf="scanLoading">⟳ Đang quét…</span>
+      </button>
+    </div>
+    <div *ngIf="projectContext" class="ctx-preview">
+      <div class="ctx-label">Conventions đã học:</div>
+      <pre class="ctx-body">{{ projectContext }}</pre>
+    </div>
+  </div>
+
+  <!-- ── Input ── -->
+  <div class="orch-input-bar">
+    <textarea
+      [(ngModel)]="featureRequest"
+      placeholder="Mô tả tính năng cần xây dựng…"
+      rows="3"
+      [disabled]="loading"
+    ></textarea>
+    <button class="btn-run" (click)="run()" [disabled]="loading || !featureRequest.trim()">
+      <span *ngIf="!loading">▶ Run</span>
+      <span *ngIf="loading" class="spinner">⟳ Đang chạy…</span>
+    </button>
+  </div>
+
+  <!-- ── Error ── -->
+  <div *ngIf="error" class="orch-error">⚠ {{ error }}</div>
+
+  <!-- ── Loading state ── -->
+  <div *ngIf="loading" class="orch-loading">
+    <div class="spinner-row">
+      <span class="spinner">⟳</span>
+      <span class="loading-label">Đang chạy pipeline…</span>
+    </div>
+    <div *ngIf="jobLogs.length > 0" class="job-log">
+      <div *ngFor="let log of jobLogs" class="job-log-line">{{ log }}</div>
+    </div>
+    <div *ngIf="jobLogs.length === 0" class="pipeline-progress">
+      <div class="step">🧠 BA Agent đang thu thập yêu cầu…</div>
+      <div class="step">💻 DEV Agent đang sinh code…</div>
+      <div class="step">🧪 QA Agent đang kiểm tra…</div>
+    </div>
+  </div>
+
+  <!-- ── Result ── -->
+  <div *ngIf="result && !loading" class="orch-result">
+
+    <!-- Status bar -->
+    <div class="status-bar" [class.pass]="result.status === 'PASS'" [class.fail]="result.status === 'FAIL'">
+      <span class="status-badge">{{ result.status === 'PASS' ? '✅ PASS' : '❌ FAIL' }}</span>
+      <span class="status-info">{{ result.files.length }} files · QA retries: {{ result.retryCount }}</span>
+      <span *ngIf="result.outputDir" class="output-dir" (click)="copyOutputDir()" title="Click để copy đường dẫn">
+        📁 {{ result.outputDir }}
+      </span>
+      <span *ngIf="result.error" class="status-err">{{ result.error }}</span>
+    </div>
+
+    <!-- Sub-task list (chỉ hiện khi có split) -->
+    <div *ngIf="result.subResults && result.subResults.length > 1" class="subtask-bar">
+      <div
+        *ngFor="let sub of result.subResults"
+        class="subtask-item"
+        [class.active]="sub === selectedSubTask"
+        [class.pass]="sub.status === 'PASS'"
+        [class.fail]="sub.status === 'FAIL'"
+        (click)="selectSubTask(sub)"
+      >
+        <span class="subtask-status">{{ sub.status === 'PASS' ? '✅' : '❌' }}</span>
+        <span class="subtask-name">{{ sub.specName }}</span>
+        <span class="subtask-files">{{ sub.files.length }} files</span>
+      </div>
+    </div>
+
+    <!-- 3-column layout -->
+    <div class="orch-body">
+
+      <!-- Col 1: File list -->
+      <div class="col-files">
+        <div class="col-label">Files</div>
+        <div
+          *ngFor="let f of activeFiles"
+          class="file-item"
+          [class.selected]="f.filePath === selectedFile?.filePath"
+          [class.has-bugs]="fileHasBugs(f.filePath)"
+          (click)="selectFile(f)"
+          [title]="f.filePath"
+        >
+          <span class="file-icon">📄</span>
+          <span class="file-name">{{ f.filePath.split('/').pop() }}</span>
+          <span *ngIf="fileHasBugs(f.filePath)" class="bug-dot" title="Có bug">●</span>
+        </div>
+        <div *ngIf="activeFiles.length === 0" class="col-empty">Không có file</div>
+      </div>
+
+      <!-- Col 2: Code viewer -->
+      <div class="col-code">
+        <div class="col-label">
+          <span *ngIf="selectedFile">{{ selectedFile.filePath }}</span>
+          <span *ngIf="!selectedFile">Chọn file để xem</span>
+        </div>
+        <pre *ngIf="selectedFile" class="code-block"><code>{{ selectedFile.content }}</code></pre>
+        <div *ngIf="!selectedFile" class="col-empty">← Chọn file</div>
+      </div>
+
+      <!-- Col 3: Tabs (Spec / QA) -->
+      <div class="col-info">
+        <div class="tabs">
+          <button [class.active]="activeTab === 'spec'" (click)="activeTab = 'spec'">Spec</button>
+          <button [class.active]="activeTab === 'qa'"   (click)="activeTab = 'qa'">QA</button>
+        </div>
+
+        <!-- Spec tab -->
+        <div *ngIf="activeTab === 'spec'" class="tab-body">
+          <pre class="code-block spec"><code>{{ formatJson(activeSpec) }}</code></pre>
+        </div>
+
+        <!-- QA tab -->
+        <div *ngIf="activeTab === 'qa'" class="tab-body">
+
+          <div *ngIf="(parsedQa?.bugs?.length ?? 0) === 0" class="qa-pass">
+            ✅ Không có bug
+          </div>
+
+          <ng-container *ngIf="(parsedQa?.bugs?.length ?? 0) > 0">
+            <div *ngFor="let entry of bugsByFile | keyvalue" class="bug-group">
+              <div class="bug-file">📄 {{ entry.key }} ({{ entry.value.length }})</div>
+              <div *ngFor="let bug of entry.value" class="bug-item">
+                <span class="bug-sev" [class]="severityClass(bug.severity)">{{ bug.severity }}</span>
+                <span class="bug-desc">{{ bug.description }}</span>
+              </div>
+            </div>
+          </ng-container>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+</div>

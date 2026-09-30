@@ -1,0 +1,52 @@
+{
+  "name": "Pushsale",
+  "description": "Nền tảng CRM + bán hàng + giao vận (logistics) đa tenant cho team telesale/online, build trên DotNetNuke. Khác hẳn SCRM: đây là monolith VB.NET trên DNN, KHÔNG phải microservice .NET 6.",
+
+  "paths": "-> Hỏi user khi bắt đầu task. SVN root chứa: pushsale.sln, web/ (DNN site), lib/ (class libraries), Services/ (microservice mới), sb.generator/, docs/. KHÔNG hardcode path cá nhân vào file này.",
+
+  "vcs": "SVN (folder .svn) + Git (folder .git) song song. Git là VCS chính khi làm việc.",
+
+  "platform": {
+    "framework": ".NET Framework 4.8 (web) + DotNetNuke Platform 7.04.02",
+    "source": "DNN_Platform_07.04.02_Source/ (source DNN gốc, ít khi đụng)",
+    "language": "VB.NET cho web + DAL/helper legacy; C# cho Services/ và sb.generator",
+    "ui": "ASP.NET WebForms — User Control (.ascx) + code-behind (.ascx.vb), kế thừa PortalModuleBase",
+    "database": "SQL Server (truy cập 100% qua Stored Procedure, KHÔNG ORM ở phần legacy)",
+    "search": "Elasticsearch (domain ES)",
+    "cache": "In-memory CacheHelper + Redis"
+  },
+
+  "solution": {
+    "file": "pushsale.sln",
+    "projects": [
+      { "name": "web",                              "type": "DNN Website (.NET 4.8)", "lang": "VB",  "note": "Site chính, chứa module APP" },
+      { "name": "base.helper",                       "type": "Class Library",          "lang": "VB",  "folder": "lib/base.heplper/ (LƯU Ý: folder sai chính tả 'heplper', project name là base.helper)" },
+      { "name": "base.dal",                          "type": "Class Library",          "lang": "VB",  "folder": "lib/base.dal/", "note": "Data Access Layer, 30+ domain" },
+      { "name": "base.report",                       "type": "Class Library",          "lang": "VB",  "folder": "lib/base.report/" },
+      { "name": "Microsoft.ApplicationBlocks.Data",  "type": "Class Library",          "lang": "C#",  "note": "SqlHelper — wrapper ADO.NET (Enterprise Library cũ)" },
+      { "name": "sb.application.helper.logtime",     "type": "Class Library",          "lang": "C#" },
+      { "name": "sb.invoice.helper",                 "type": "Class Library",          "lang": "VB" },
+      { "name": "sb.test.lib",                       "type": "Class Library",          "lang": "C#",  "note": "unit test lib" },
+      { "name": "sb.generator",                      "type": "Console/Lib",            "lang": "C#",  "note": "Snowflake-like distributed ID generator" }
+    ]
+  },
+
+  "services_microservice": {
+    "note": "Hướng tách dần sang microservice .NET Core (xem micro service.txt — tài liệu tham khảo DDD). Hiện có:",
+    "File": "Services/File/ — File.API (ASP.NET Core + MongoDB + gRPC + JWT) + File.DataContext (EF Core)",
+    "Shared": "Services/Shared/Pushsale.CommonV3 (C#, gRPC, Dapper) + Pushsale.Common (legacy)"
+  },
+
+  "ui_module_root": "web/DesktopModules/APP/ — toàn bộ nghiệp vụ Pushsale (542 file .ascx.vb)",
+
+  "git": {
+    "branches": {
+      "master": "backup của dev",
+      "dev": "main branch môi trường dev",
+      "feature": "dev_[dev_name]_[feature_name], vd dev_luannt_giao_hang",
+      "product": "branch deploy product, chỉ nhận merge từ product_hot_fix",
+      "product_hot_fix": "hotfix product: product -> product_hot_fix -> fix -> merge về product"
+    },
+    "commit_style": "Tiếng Việt, casual: feat:/fix:/bổ sung ..."
+  }
+}

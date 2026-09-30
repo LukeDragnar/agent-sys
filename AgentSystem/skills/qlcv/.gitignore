@@ -1,0 +1,8 @@
+# Data runtime/secret (creds.json, token.txt, team.json, users.json, mytasks.json,
+# timeline.json, worklog...) KHÔNG còn ghi ở đây nữa — worker ghi vào memory/local/qlcv/
+# (đã gitignore ở tầng repo), hoặc thư mục set qua env QLCV_DATA_DIR.
+# Thư mục này (skills/qlcv/) chỉ chứa CODE + docs + creds.json.template (đều commit).
+
+# Python bytecode
+__pycache__/
+*.pyc

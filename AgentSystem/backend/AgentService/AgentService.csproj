@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.25" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AgentCore\AgentCore.csproj" />
+    <ProjectReference Include="..\AgentInfrastructure\AgentInfrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Copy embedding model files vào output để OnnxEmbedder load runtime -->
+    <None Include="Models\**\*.*" Condition="Exists('Models')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <Target Name="KillRunningApp" BeforeTargets="Build">
+    <Exec Command="taskkill /IM AgentService.exe /F" ContinueOnError="true" />
+  </Target>
+</Project>

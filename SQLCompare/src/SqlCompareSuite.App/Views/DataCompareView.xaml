@@ -1,0 +1,433 @@
+<UserControl x:Class="SqlCompareSuite.App.Views.DataCompareView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:SqlCompareSuite.App.Views">
+    <Grid Background="{StaticResource RgContentBg}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <!-- 0: Action bar (Refresh/Swap/Save/Load/Options/Load Tables...) -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Banner Source ⇄ Target (Selected + Deploy) -->
+            <RowDefinition Height="Auto" />
+            <!-- 2: Options popup anchor -->
+            <RowDefinition Height="Auto" />
+            <!-- 3: Summary + select (ẩn — đã có master checkbox) -->
+            <RowDefinition Height="*" />
+            <!-- 4: Diff grid (grouped) -->
+            <RowDefinition Height="Auto" />
+            <!-- 5: GridSplitter -->
+            <RowDefinition Height="1.2*" />
+            <!-- 6: Side-by-side data panel (gồm filter tabs ở trên) -->
+            <RowDefinition Height="Auto" />
+            <!-- 7: Script bar (ẩn → qua Deploy wizard) -->
+            <RowDefinition Height="Auto" />
+            <!-- 8: Script output (ẩn) -->
+        </Grid.RowDefinitions>
+
+        <!-- Panel kết nối CŨ: GIỮ để dùng logic Get/SetConnectionInfo, nhưng ẩn. -->
+        <Grid Visibility="Collapsed">
+            <views:ConnectionPanel x:Name="SourcePanel" Title="Source (left)" />
+            <views:ConnectionPanel x:Name="TargetPanel" Title="Target (right)" />
+        </Grid>
+
+        <!-- ===================== Action bar (trên cùng) ===================== -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="2,2,2,4" VerticalAlignment="Center">
+            <!-- Nút Compare CŨ → đổi thành 🔄 Refresh, đẩy lên action bar (giữ x:Name + Click). -->
+            <Button x:Name="CompareButton" Content="🔄 Refresh" Click="CompareButton_Click" Margin="0,0,8,0"
+                    ToolTip="Chạy (lại) so sánh dữ liệu" FontWeight="SemiBold" />
+            <Button x:Name="SwapButton" Content="⇄ Swap" Click="SwapButton_Click" />
+            <Button x:Name="SaveProjectButton" Content="Save Project" Click="SaveProjectButton_Click" Margin="8,0,0,0" />
+            <Button x:Name="LoadProjectButton" Content="Load Project" Click="LoadProjectButton_Click" Margin="4,0,0,0" />
+            <Button x:Name="OptionsButton" Content="⚙ Options" Click="OptionsButton_Click" Margin="4,0,0,0"
+                    ToolTip="Tuỳ chọn so sánh / lọc / Load Tables / chọn bảng (click mở)" />
+            <Button x:Name="EditProjectButton" Content="✎ Edit project" Click="EditProjectButton_Click" Margin="4,0,0,0" />
+            <Button x:Name="ViewDetailsTopButton" Content="🔍 View Details" Click="ViewDetailsButton_Click" Margin="4,0,0,0" />
+            <TextBlock Text="🔍" VerticalAlignment="Center" Margin="12,0,2,0" Foreground="#888" />
+            <TextBox x:Name="SearchBox" Width="170" VerticalAlignment="Center"
+                     TextChanged="SearchBox_TextChanged" ToolTip="Tìm bảng theo tên (lọc danh sách trên)" />
+            <ProgressBar x:Name="BusyBar" Width="120" Height="14" IsIndeterminate="True"
+                         Visibility="Collapsed" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <TextBlock x:Name="BusyText" Text="Đang xử lý..." Foreground="#DD6294"
+                       Visibility="Collapsed" VerticalAlignment="Center" Margin="6,0,0,0" />
+            <TextBlock x:Name="StatusText" Text="" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="#555" />
+        </StackPanel>
+
+        <!-- ===================== BANNER Source ⇄ Target ===================== -->
+        <Border Grid.Row="1" Margin="2,2,2,4" CornerRadius="4" BorderBrush="#DDDDDD" BorderThickness="1">
+            <!-- Double-click vào banner → đảo Source ⇄ Target rồi so lại. -->
+            <Grid Height="64" Background="Transparent" MouseLeftButtonDown="Banner_MouseDown"
+                  ToolTip="Double-click để đảo chiều Source ⇄ Target">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Trái (vị trí cố định) — màu/vai trò đổi theo chiều (code-behind) -->
+                <Border x:Name="LeftSideBorder" Grid.Column="0" Background="White" CornerRadius="4,0,0,4">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                        <Border Width="40" Height="40" CornerRadius="20" Background="#FCE3EC">
+                            <TextBlock Text="🛢" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="SourceServerLabel" Text="(no server)" FontWeight="Bold" FontSize="14" Foreground="#222" />
+                            <TextBlock x:Name="SourceDbLabel" Text="(no database)" FontSize="12" Foreground="#666" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Giữa: bố cục Redgate — [Selected] cạnh [Deploy chevron], đảo bên theo chiều deploy -->
+                <Grid Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <!-- Selected count — code đổi cột (trái khi →, phải khi ←) -->
+                    <StackPanel x:Name="SelectedPanel" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,14,0">
+                        <TextBlock Text="Selected" FontSize="11" Foreground="#888" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="SelectedCountText" Text="0 of 0" FontSize="14" FontWeight="Bold"
+                                   Foreground="#333" HorizontalAlignment="Center" />
+                        <!-- Giữ BannerCountsText (ẩn) để code-behind set không lỗi. -->
+                        <TextBlock x:Name="BannerCountsText" Text="" Visibility="Collapsed" />
+                    </StackPanel>
+                    <!-- Deploy = chevron xanh lá lớn, đảo hướng khi Swap -->
+                    <Grid x:Name="ChevronHost" Grid.Column="1" Width="172" Height="48">
+                        <Polygon x:Name="DeployChevron" Fill="#43A047"
+                                 Points="0,0 150,0 172,24 150,48 0,48" RenderTransformOrigin="0.5,0.5" />
+                        <Button x:Name="DeployButton" Content="Deploy  ➡" Click="DeployButton_Click"
+                                Background="Transparent" BorderThickness="0" Foreground="White"
+                                FontWeight="Bold" FontSize="15" Cursor="Hand"
+                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                ToolTip="Deploy theo chiều mũi tên. Double-click banner để đảo chiều.">
+                            <!-- Template trong suốt: KHÔNG đổi nền khi hover/press (giữ chevron xanh) -->
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="Transparent">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Grid>
+
+                <!-- Phải (vị trí cố định) — màu/vai trò đổi theo chiều (code-behind) -->
+                <Grid Grid.Column="2">
+                    <Border x:Name="RightSideBorder" Background="{StaticResource RgBanner}" CornerRadius="0,4,4,0" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="16,0">
+                        <StackPanel Margin="0,0,12,0" VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <TextBlock x:Name="TargetServerLabel" Text="(no server)" FontWeight="Bold" FontSize="14"
+                                       Foreground="White" TextAlignment="Right" />
+                            <TextBlock x:Name="TargetDbLabel" Text="(no database)" FontSize="12"
+                                       Foreground="#FBE0EC" TextAlignment="Right" />
+                        </StackPanel>
+                        <Border Width="40" Height="40" CornerRadius="20" Background="#C9527F">
+                            <TextBlock Text="🛢" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- ===================== Options popup (mở từ nút ⚙ Options) ===================== -->
+        <Popup x:Name="OptionsPopup" Grid.Row="2" PlacementTarget="{Binding ElementName=OptionsButton}"
+               Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+            <Border Background="White" BorderBrush="#CCCCCC" BorderThickness="1" Padding="10" MaxWidth="700">
+                <StackPanel Margin="6,4,6,4">
+                    <!-- Load Tables + chọn bảng -->
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                        <Button x:Name="LoadTablesButton" Content="Load Tables" Click="LoadTablesButton_Click" MinWidth="100" />
+                        <TextBlock Text="Table:" VerticalAlignment="Center" Margin="10,0,6,0" />
+                        <ComboBox x:Name="TableCombo" Width="260" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- WHERE + Top-N -->
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,2">
+                        <TextBlock Text="WHERE:" VerticalAlignment="Center" Width="60" />
+                        <TextBox x:Name="WhereBox" Width="320" VerticalAlignment="Center"
+                                 ToolTip="Điều kiện WHERE (không gồm từ 'WHERE'), áp cho cả 2 bên." />
+                        <TextBlock Text="Top-N:" VerticalAlignment="Center" Width="50" Margin="16,0,0,0" />
+                        <TextBox x:Name="TopNBox" Width="80" VerticalAlignment="Center"
+                                 ToolTip="Số nguyên, rỗng = đọc tất cả." />
+                    </StackPanel>
+
+                    <!-- Custom key + backup -->
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,2">
+                        <TextBlock Text="Custom Key:" VerticalAlignment="Center" Width="80" />
+                        <TextBox x:Name="CustomKeyBox" Width="320" VerticalAlignment="Center"
+                                 ToolTip="Cột key tự chọn, phân tách bằng ';'. VD: Email" />
+                        <CheckBox x:Name="BackupBeforeSyncChk" Content="Backup target before sync"
+                                  VerticalAlignment="Center" Margin="20,0,0,0" />
+                    </StackPanel>
+
+                    <!-- Export report -->
+                    <WrapPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <Button x:Name="ExportReportButton" Content="Export Report" Click="ExportReportButton_Click" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- ===================== Summary + select (ẩn — đã có master checkbox header) ===================== -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="2,2,2,4" VerticalAlignment="Center" Visibility="Collapsed">
+            <TextBlock x:Name="SummaryText" VerticalAlignment="Center" FontWeight="SemiBold" />
+            <Button x:Name="SelectAllButton" Content="Select All" Click="SelectAllButton_Click" Margin="20,0,4,0" />
+            <Button x:Name="SelectNoneButton" Content="Select None" Click="SelectNoneButton_Click" />
+            <Button x:Name="ViewDetailsButton" Content="View Details" Click="ViewDetailsButton_Click" Margin="8,0,0,0" />
+
+            <!-- FilterCombo CŨ: GIỮ để RowFilter dùng SelectedIndex, ẩn đi. Tab dưới set SelectedIndex. -->
+            <ComboBox x:Name="FilterCombo" Width="0" SelectedIndex="0" Visibility="Collapsed"
+                      SelectionChanged="FilterCombo_SelectionChanged">
+                <ComboBoxItem Content="All" />
+                <ComboBoxItem Content="Only different" />
+                <ComboBoxItem Content="Only in source" />
+                <ComboBoxItem Content="Only in target" />
+                <ComboBoxItem Content="Identical" />
+            </ComboBox>
+        </StackPanel>
+
+        <!-- ===================== TABLE LIST (trên) — mỗi table 1 dòng + counts ===================== -->
+        <DataGrid x:Name="TablesGrid" Grid.Row="4" Margin="2"
+                  AutoGenerateColumns="False" CanUserAddRows="False"
+                  IsReadOnly="False" SelectionMode="Single"
+                  HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                  HorizontalScrollBarVisibility="Disabled"
+                  SizeChanged="TablesGrid_SizeChanged"
+                  SelectionChanged="TablesGrid_SelectionChanged">
+            <DataGrid.Columns>
+                <!-- ☑ Include table — tristate theo rows; click = tick/bỏ toàn bộ rows table đó -->
+                <DataGridTemplateColumn Width="40" CanUserSort="False">
+                    <DataGridTemplateColumn.Header>
+                        <CheckBox x:Name="TablesHeaderCheck" IsThreeState="False" Click="TablesHeaderCheck_Click"
+                                  HorizontalAlignment="Center" ToolTip="Chọn / bỏ chọn tất cả bảng" />
+                    </DataGridTemplateColumn.Header>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <!-- Identical (bằng nhau) → ẩn checkbox, không cần deploy -->
+                            <CheckBox IsChecked="{Binding Include, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      Visibility="{Binding IncludeCheckVisibility}"
+                                      Click="TableInclude_Click" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Type" Binding="{Binding TypeText}" Width="70" IsReadOnly="True" />
+                <DataGridTextColumn x:Name="TableNameCol" Header="Table" Binding="{Binding TableKey}" Width="320" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Margin" Value="6,0,0,0" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="ToolTip" Value="{Binding KeyKindText}" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <!-- Counts: căn phải, 0 = để trống cho đỡ rối -->
+                <DataGridTextColumn Header="Source only" Binding="{Binding SourceOnlyText}" Width="95" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right" /><Setter Property="Margin" Value="0,0,8,0" /><Setter Property="Foreground" Value="#1E8A4C" /></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Different" Binding="{Binding DifferentText}" Width="80" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right" /><Setter Property="Margin" Value="0,0,8,0" /><Setter Property="Foreground" Value="#C2185B" /><Setter Property="FontWeight" Value="SemiBold" /></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Target only" Binding="{Binding TargetOnlyText}" Width="95" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right" /><Setter Property="Margin" Value="0,0,8,0" /><Setter Property="Foreground" Value="#B26A00" /></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Identical" Binding="{Binding IdenticalText}" Width="80" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="HorizontalAlignment" Value="Right" /><Setter Property="Margin" Value="0,0,8,0" /><Setter Property="Foreground" Value="#888" /></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+
+            <!-- Nhóm theo TypeText (Different / Identical) — header toggle + count -->
+            <DataGrid.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.ContainerStyle>
+                        <Style TargetType="{x:Type GroupItem}">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type GroupItem}">
+                                        <StackPanel>
+                                            <Border Background="{StaticResource RgGroupHeader}" BorderBrush="#D5D5D5"
+                                                    BorderThickness="0,0,0,1" Cursor="Hand"
+                                                    MouseLeftButtonUp="GroupHeader_MouseUp">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,2,0,2">
+                                                    <ToggleButton x:Name="TGroupToggle" IsChecked="True" Focusable="False"
+                                                                  Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="2,0">
+                                                        <TextBlock x:Name="TToggleGlyph" Text="▼" FontSize="9" Foreground="#666" />
+                                                    </ToggleButton>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="Bold"
+                                                               Foreground="{StaticResource RgGroupHeaderText}" Margin="6,0,0,0" />
+                                                    <TextBlock Text=" (" Foreground="#666" />
+                                                    <TextBlock Text="{Binding ItemCount}" Foreground="#666" />
+                                                    <TextBlock Text=")" Foreground="#666" />
+                                                </StackPanel>
+                                            </Border>
+                                            <ItemsPresenter x:Name="TGroupItemsHost" />
+                                        </StackPanel>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger SourceName="TGroupToggle" Property="IsChecked" Value="False">
+                                                <Setter TargetName="TGroupItemsHost" Property="Visibility" Value="Collapsed" />
+                                                <Setter TargetName="TToggleGlyph" Property="Text" Value="►" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </GroupStyle.ContainerStyle>
+                </GroupStyle>
+            </DataGrid.GroupStyle>
+        </DataGrid>
+
+        <!-- ===================== Splitter resize giữa list table (trên) và rows (dưới) ===================== -->
+        <GridSplitter Grid.Row="5" Height="6" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                      ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" Background="#C8C8C8" Margin="2,0" />
+
+        <!-- ===================== ROW DETAIL (dưới) — rows của table đang chọn ===================== -->
+        <Border Grid.Row="6" Margin="2,0,2,4" BorderBrush="#DDDDDD" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <!-- title -->
+                    <RowDefinition Height="Auto" />
+                    <!-- filter tabs (ngay trên grid như Redgate) -->
+                    <RowDefinition Height="*" />
+                    <!-- rows grid -->
+                </Grid.RowDefinitions>
+
+                <!-- Title row detail (trên cùng) -->
+                <Border Grid.Row="0" Background="{StaticResource RgDark}" Padding="10,5">
+                    <TextBlock x:Name="SidePanelTitle" Foreground="White" FontFamily="Consolas"
+                               Text="(chọn 1 bảng ở trên để xem chi tiết row)" />
+                </Border>
+
+                <!-- Filter tabs (dark) — ngay SÁT trên grid, mặc định All -->
+                <Border Grid.Row="1" Background="{StaticResource RgDark}" BorderBrush="#1A1A1A" BorderThickness="0,1,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="FilterTabAll" Style="{StaticResource FilterTab}" Content="All rows"
+                                     GroupName="Filter" Tag="0" IsChecked="True" Checked="FilterTab_Checked" />
+                        <RadioButton x:Name="FilterTabSource" Style="{StaticResource FilterTab}" Content="Only in Source"
+                                     GroupName="Filter" Tag="2" Checked="FilterTab_Checked" />
+                        <RadioButton x:Name="FilterTabDifferent" Style="{StaticResource FilterTab}" Content="In both but different"
+                                     GroupName="Filter" Tag="1" Checked="FilterTab_Checked" />
+                        <RadioButton x:Name="FilterTabTarget" Style="{StaticResource FilterTab}" Content="Only in Target"
+                                     GroupName="Filter" Tag="3" Checked="FilterTab_Checked" />
+                        <RadioButton x:Name="FilterTabIdentical" Style="{StaticResource FilterTab}" Content="Identical"
+                                     GroupName="Filter" Tag="4" Checked="FilterTab_Checked" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Rows grid: cột ☑ Include + Status cố định, các cột <col> (S)/(T) sinh động.
+                     Chọn row → bôi sáng nhờ RowStyle IsSelected; ô khác biệt tô hồng qua BoolToBrush. -->
+                <DataGrid x:Name="DiffGrid" Grid.Row="2" Margin="2"
+                          AutoGenerateColumns="False" CanUserAddRows="False"
+                          IsReadOnly="False" SelectionMode="Single"
+                          HeadersVisibility="Column"
+                          HorizontalScrollBarVisibility="Auto"
+                          FrozenColumnCount="1"
+                          EnableRowVirtualization="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          SelectionChanged="DiffGrid_SelectionChanged"
+                          MouseDoubleClick="DiffGrid_MouseDoubleClick">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="46" CanUserSort="False">
+                            <DataGridTemplateColumn.Header>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <CheckBox x:Name="HeaderCheckBox" IsThreeState="False" Click="HeaderCheckBox_Click"
+                                              VerticalAlignment="Center" ToolTip="Chọn / bỏ chọn tất cả row" />
+                                    <TextBlock x:Name="IncludeDirArrow" Text="→" FontSize="13" FontWeight="Bold"
+                                               Foreground="#43A047" VerticalAlignment="Center" Margin="2,0,0,0"
+                                               ToolTip="Chiều deploy (Source → Target)" />
+                                </StackPanel>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding Include, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+
+                    <!-- Dòng đang chọn = CAM (ô khác biệt vẫn giữ hồng vì tô trên cell) -->
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#FFCC80" />
+                                    <Setter Property="BorderBrush" Value="#F0A030" />
+                                    <Setter Property="BorderThickness" Value="0,1,0,1" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+
+                    <DataGrid.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.ContainerStyle>
+                                <Style TargetType="{x:Type GroupItem}">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="{x:Type GroupItem}">
+                                                <StackPanel>
+                                                    <Border Background="{StaticResource RgGroupHeader}" BorderBrush="#D5D5D5"
+                                                            BorderThickness="0,0,0,1">
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,2,0,2">
+                                                            <ToggleButton x:Name="GroupToggle" IsChecked="True" Focusable="False"
+                                                                          Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="2,0">
+                                                                <TextBlock x:Name="ToggleGlyph" Text="▼" FontSize="9" Foreground="#666" />
+                                                            </ToggleButton>
+                                                            <CheckBox IsThreeState="False" Loaded="GroupCheck_Loaded"
+                                                                      Click="GroupCheck_Click" VerticalAlignment="Center"
+                                                                      Margin="4,0,0,0" ToolTip="Tick/bỏ cả nhóm để deploy" />
+                                                            <TextBlock Text="{Binding Name}" FontWeight="Bold"
+                                                                       Foreground="{StaticResource RgGroupHeaderText}" Margin="6,0,0,0" />
+                                                            <TextBlock Text=" (" Foreground="#666" />
+                                                            <TextBlock Text="{Binding ItemCount}" Foreground="#666" />
+                                                            <TextBlock Text=")" Foreground="#666" />
+                                                            <TextBlock Loaded="GroupCount_Loaded" Foreground="#1E8A4C"
+                                                                       Margin="10,0,0,0" FontSize="11" FontWeight="SemiBold" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ItemsPresenter x:Name="GroupItemsHost" />
+                                                </StackPanel>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger SourceName="GroupToggle" Property="IsChecked" Value="False">
+                                                        <Setter TargetName="GroupItemsHost" Property="Visibility" Value="Collapsed" />
+                                                        <Setter TargetName="ToggleGlyph" Property="Text" Value="►" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </GroupStyle.ContainerStyle>
+                        </GroupStyle>
+                    </DataGrid.GroupStyle>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <!-- Script/Copy/Save/Execute + output: ẩn ở main view → BẮT BUỘC qua nút Deploy (wizard).
+             Vẫn giữ trong cây để code-behind set ScriptBox (wizard nhận từ đó). -->
+        <StackPanel Grid.Row="7" Orientation="Horizontal" Margin="2,2,2,4" Visibility="Collapsed">
+            <Button x:Name="GenerateButton" Content="Generate Sync Script (Target ← Source)"
+                    Click="GenerateButton_Click" MinWidth="240" />
+            <Button x:Name="CopyButton" Content="Copy" Click="CopyButton_Click" />
+            <Button x:Name="SaveButton" Content="Save .sql" Click="SaveButton_Click" />
+            <Button x:Name="ExecuteButton" Content="Execute on Target" Click="ExecuteButton_Click"
+                    Margin="12,0,0,0" Background="#FFE0E0" />
+        </StackPanel>
+
+        <TextBox x:Name="ScriptBox" Grid.Row="8" Margin="2" Height="110" Visibility="Collapsed"
+                 IsReadOnly="True" FontFamily="Consolas" FontSize="12"
+                 TextWrapping="Wrap" AcceptsReturn="True"
+                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                 Background="{StaticResource RgContentBg}" />
+    </Grid>
+</UserControl>

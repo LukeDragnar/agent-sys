@@ -1,0 +1,29 @@
+{
+  "name": "DeliveryConnect",
+  "description": "Kết nối CRM với đối tác vận chuyển. Tạo/hủy/cập nhật đơn, tính phí, đồng bộ địa chỉ.",
+
+  "paths": "-> Hoi user khi bat dau task. Key: root",
+
+  "projects": [
+    "DeliveryConnect.API",
+    "DeliveryConnect.DataContext",
+    "DeliveryConnect.Service"
+  ],
+
+  "techStack": {
+    "framework": ".NET 6 ASP.NET Core Web API",
+    "orm": "Entity Framework Core 7.0.2 + EFCore.BulkExtensions",
+    "messaging": "MassTransit 8.1 + RabbitMQ",
+    "scheduler": "Quartz.NET 3.6.2",
+    "cache": "Redis",
+    "mapper": "AutoMapper 12",
+    "http": "RestSharp 108",
+    "pdf": "PDFsharp 6.2.1",
+    "misc": "BackgroundQueue 1.0.0.3, SqlSugarCore"
+  },
+
+  "relatedProjects": [
+    "ecommerce_connect — nhận MessageCreateOrder/CancelOrder",
+    "delivery_receive — đăng ký callback URL nhận trạng thái"
+  ]
+}

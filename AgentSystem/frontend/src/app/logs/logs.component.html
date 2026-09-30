@@ -1,0 +1,78 @@
+<div class="logs-layout">
+
+  <header class="logs-header">
+    <button class="btn-back" (click)="back()">← Back</button>
+    <span class="logs-title">📋 Agent Logs</span>
+    <div class="filter-bar">
+      <select [(ngModel)]="filterCategory">
+        <option value="">All categories</option>
+        <option *ngFor="let c of categories.slice(1)" [value]="c">{{ c }}</option>
+      </select>
+      <select [(ngModel)]="filterAgentType">
+        <option value="">All agents</option>
+        <option *ngFor="let t of agentTypes.slice(1)" [value]="t">{{ t }}</option>
+      </select>
+      <input type="date" [(ngModel)]="filterFrom" title="Từ ngày">
+      <input type="date" [(ngModel)]="filterTo" title="Đến ngày">
+      <button class="btn-reload" (click)="load()">↻ Reload</button>
+    </div>
+  </header>
+
+  <div class="logs-body">
+
+    <!-- Table -->
+    <div class="logs-table-wrap">
+      <div *ngIf="loading" class="logs-loading">Đang tải…</div>
+      <div *ngIf="!loading && logs.length === 0" class="logs-empty">Chưa có log nào</div>
+
+      <table *ngIf="!loading && logs.length > 0" class="logs-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Agent / Type</th>
+            <th>Input</th>
+            <th>Output</th>
+            <th>Duration</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let log of logs"
+            [class.selected]="log.id === selected?.id"
+            (click)="select(log)"
+          >
+            <td><span class="badge" [class]="categoryBadgeClass(log.category)">{{ log.category }}</span></td>
+            <td><span class="badge badge-sm" [class]="agentBadgeClass(log.agentType)">{{ log.agentType }}</span></td>
+            <td class="cell-truncate">{{ log.input }}</td>
+            <td class="cell-truncate">{{ log.output }}</td>
+            <td class="cell-num">{{ log.durationMs ? log.durationMs + 'ms' : '—' }}</td>
+            <td class="cell-time">{{ log.createdAt | date:'dd/MM HH:mm:ss' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Detail panel -->
+    <div *ngIf="selected" class="log-detail">
+      <div class="detail-header">
+        <span class="badge" [class]="categoryBadgeClass(selected.category)">{{ selected.category }}</span>
+        <span class="badge badge-sm" [class]="agentBadgeClass(selected.agentType)">{{ selected.agentType }}</span>
+        <span class="detail-time">{{ selected.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+        <span class="detail-dur" *ngIf="selected.durationMs">{{ selected.durationMs }}ms</span>
+        <button class="btn-close" (click)="selected = null">✕</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-section">
+          <div class="detail-label">Input</div>
+          <pre class="detail-pre">{{ selected.input }}</pre>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">Output</div>
+          <pre class="detail-pre">{{ selected.output }}</pre>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /logs-body -->
+</div>

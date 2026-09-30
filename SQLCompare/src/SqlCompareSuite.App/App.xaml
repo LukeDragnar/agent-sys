@@ -1,0 +1,265 @@
+<Application x:Class="SqlCompareSuite.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:SqlCompareSuite.App.Views"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <!-- Converter: bool (Different) -> Brush nền cho ô giá trị khác biệt -->
+        <views:BoolToBrushConverter x:Key="BoolToBrush" />
+
+        <!-- ===================== BẢNG MÀU REDGATE ===================== -->
+        <!-- Đỏ logo + tông tối -->
+        <SolidColorBrush x:Key="RgRed" Color="#C81E2D" />
+        <SolidColorBrush x:Key="RgDark" Color="#2D2D30" />
+        <SolidColorBrush x:Key="RgDarkText" Color="#FFFFFF" />
+        <!-- Toolbar light -->
+        <SolidColorBrush x:Key="RgToolbarLight" Color="#F3F3F3" />
+        <SolidColorBrush x:Key="RgToolbarBorder" Color="#DDDDDD" />
+        <!-- Nút xanh primary -->
+        <SolidColorBrush x:Key="RgBlue" Color="#E97AA6" />
+        <SolidColorBrush x:Key="RgBlueHover" Color="#DD6294" />
+        <!-- Group header -->
+        <SolidColorBrush x:Key="RgGroupHeader" Color="#E8E8E8" />
+        <SolidColorBrush x:Key="RgGroupHeaderText" Color="#333333" />
+        <!-- Highlight diff -->
+        <SolidColorBrush x:Key="RgDiffCell" Color="#FCE3EC" />
+        <SolidColorBrush x:Key="RgRemoved" Color="#FFECEC" />
+        <SolidColorBrush x:Key="RgAdded" Color="#EBFFEC" />
+        <SolidColorBrush x:Key="RgChanged" Color="#FFF2CC" />
+        <!-- Nền nội dung -->
+        <SolidColorBrush x:Key="RgContentBg" Color="#FAFAFA" />
+        <SolidColorBrush x:Key="RgAltRow" Color="#F7F9FB" />
+        <SolidColorBrush x:Key="RgGridHeader" Color="#ECECEC" />
+        <!-- Banner gradient xanh -->
+        <LinearGradientBrush x:Key="RgBanner" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#F6BBD0" Offset="0" />
+            <GradientStop Color="#E97AA6" Offset="1" />
+        </LinearGradientBrush>
+
+        <!-- ===================== BUTTON: LIGHT (mặc định) ===================== -->
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="MinWidth" Value="80" />
+            <Setter Property="Background" Value="#F7F7F7" />
+            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="BorderBrush" Value="#CCCCCC" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#ECECEC" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#BBBBBB" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#E0E0E0" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Background" Value="#F0F0F0" />
+                                <Setter Property="Foreground" Value="#999999" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ===================== BUTTON: PRIMARY BLUE (Deploy/Compare) ===================== -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Padding" Value="16,7" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="MinWidth" Value="100" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Background" Value="{StaticResource RgBlue}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="4" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource RgBlueHover}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#C9527F" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Background" Value="#F6D6E4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ===================== BUTTON: TOOLBAR ICON (nền tối) ===================== -->
+        <Style x:Key="ToolbarIconButton" TargetType="Button">
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Foreground" Value="#EEEEEE" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                CornerRadius="3" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#3E3E42" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#505055" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#777777" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ===================== TEXTBOX ===================== -->
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="5,3" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="BorderBrush" Value="#CCCCCC" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="White" />
+        </Style>
+
+        <!-- ===================== PASSWORDBOX ===================== -->
+        <Style TargetType="PasswordBox">
+            <Setter Property="Padding" Value="5,3" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="BorderBrush" Value="#CCCCCC" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="White" />
+        </Style>
+
+        <!-- ===================== COMBOBOX ===================== -->
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="5,3" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="BorderBrush" Value="#CCCCCC" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="MinHeight" Value="26" />
+        </Style>
+
+        <!-- ===================== LABEL ===================== -->
+        <Style TargetType="Label">
+            <Setter Property="Padding" Value="0,2" />
+            <Setter Property="Foreground" Value="#333333" />
+        </Style>
+
+        <!-- ===================== DATAGRID ===================== -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="RowBackground" Value="White" />
+            <Setter Property="AlternatingRowBackground" Value="{StaticResource RgAltRow}" />
+            <Setter Property="BorderBrush" Value="#DDDDDD" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#EEEEEE" />
+            <Setter Property="VerticalGridLinesBrush" Value="#F0F0F0" />
+            <Setter Property="RowHeaderWidth" Value="0" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+        </Style>
+
+        <!-- Header cột DataGrid -->
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{StaticResource RgGridHeader}" />
+            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="BorderBrush" Value="#DDDDDD" />
+            <Setter Property="BorderThickness" Value="0,0,1,1" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+
+        <!-- ===================== TABITEM ===================== -->
+        <Style TargetType="TabItem">
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="Margin" Value="0,0,2,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="bd" Background="#E4E4E4" BorderBrush="#CCCCCC"
+                                BorderThickness="1,1,1,0" CornerRadius="4,4,0,0" Margin="0,2,2,0">
+                            <ContentPresenter ContentSource="Header" VerticalAlignment="Center"
+                                              HorizontalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="White" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#E97AA6" />
+                                <Setter TargetName="bd" Property="Margin" Value="0,0,2,0" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#F2F2F2" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ===================== GROUPBOX ===================== -->
+        <Style TargetType="GroupBox">
+            <Setter Property="BorderBrush" Value="#DDDDDD" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="Margin" Value="2" />
+        </Style>
+
+        <!-- ===================== FILTER TAB (RadioButton dạng tab) ===================== -->
+        <Style x:Key="FilterTab" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="bd" Background="Transparent" Padding="14,7"
+                                BorderBrush="Transparent" BorderThickness="0,0,0,3">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#3E3E42" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource RgBlue}" />
+                                <Setter Property="Foreground" Value="White" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Application.Resources>
+</Application>

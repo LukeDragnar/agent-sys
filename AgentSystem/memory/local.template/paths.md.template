@@ -1,0 +1,41 @@
+# Working Paths — {Your Name}
+
+**Date:** {Date}
+
+---
+
+## Backend Code
+
+```
+WORKING_BE = 
+```
+
+Example: `D:\PROJECT\Git\_SourceForCode\Group3\scrm`
+
+---
+
+## Frontend Code
+
+```
+WORKING_FE = 
+```
+
+Example: `D:\PROJECT\Git\_SourceForCode\Group3\scrm_frontend`
+
+---
+
+## Other Projects (if applicable)
+
+```
+WORKING_ECOMMERCE = 
+WORKING_DELIVERY = 
+```
+
+---
+
+## Notes
+
+- Confirm these paths mỗi session (có thể thay đổi giữa các sessions)
+- KHÔNG hardcode paths vào git (dùng session context only)
+- Nếu paths thay đổi → update file này
+
